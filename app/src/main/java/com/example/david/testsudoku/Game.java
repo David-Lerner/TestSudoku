@@ -6,6 +6,7 @@ import android.os.Bundle;
 import com.david.completesudoku.Sudoku;
 import com.david.completesudoku.SudokuGame;
 import com.david.completesudoku.SudokuGenerator;
+import com.david.completesudoku.Selectable;
 
 public class Game extends AppCompatActivity {
 

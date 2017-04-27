@@ -1,8 +1,6 @@
 package com.example.david.testsudoku;
 
 
-import java.util.Collection;
-
 /*import org.moire.opensudoku.R;
 import org.moire.opensudoku.game.Cell;
 import org.moire.opensudoku.game.CellCollection;
@@ -10,15 +8,13 @@ import org.moire.opensudoku.game.CellNote;
 import org.moire.opensudoku.game.SudokuGame;
 import org.moire.opensudoku.game.CellCollection.OnChangeListener;*/
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import com.david.completesudoku.*;
+import com.david.completesudoku.SudokuGame;
 
 /**
  * Sudoku board widget.
@@ -36,15 +32,14 @@ public class SudokuBoardView extends View {
     private static final int NO_COLOR = 0;
 
     private SudokuGame sudokuGame;
-    private Sudoku sudoku;
     private CellTile[][] cellTiles;
 
     private float mCellWidth;
     private float mCellHeight;
 
-    private Cell mTouchedCell;
+    private CellTile mTouchedCell;
     // TODO: should I synchronize access to mSelectedCell?
-    private Cell mSelectedCell;
+    private CellTile mSelectedCell;
 
     private boolean mReadonly = false;
     private boolean mHighlightWrongVals = true;
@@ -206,38 +201,29 @@ public class SudokuBoardView extends View {
 
     public void setSudokuGame(SudokuGame game) {
         sudokuGame = game;
-        setSudoku(game.getSudoku());
     }
 
     public void setCellTiles(CellTile[][] cellTiles) {
         this.cellTiles = cellTiles;
-    }
 
-    public void setSudoku(Sudoku s) {
-        sudoku = s;
-
-        /*if (sudoku != null) {
+        if (cellTiles != null) {
             if (!mReadonly) {
-                mSelectedCell = mCells.getCell(0, 0); // first cell will be selected by default
+                mSelectedCell = cellTiles[0][0]; // first cell will be selected by default
                 onCellSelected(mSelectedCell);
             }
 
-            mCells.addOnChangeListener(new OnChangeListener() {
+            /*cellTiles.addOnChangeListener(new OnChangeListener() {
                 @Override
                 public void onChange() {
                     postInvalidate();
                 }
-            });
-        }*/
+            });*/
+        }
 
         postInvalidate();
     }
 
-    public Sudoku getSudoku() {
-        return sudoku;
-    }
-
-    public Cell getSelectedCell() {
+    public CellTile getSelectedCell() {
         return mSelectedCell;
     }
 
@@ -284,7 +270,7 @@ public class SudokuBoardView extends View {
         mOnCellTappedListener = l;
     }
 
-    protected void onCellTapped(Cell cell) {
+    protected void onCellTapped(CellTile cell) {
         if (mOnCellTappedListener != null) {
             mOnCellTappedListener.onCellTapped(cell);
         }
@@ -306,7 +292,7 @@ public class SudokuBoardView extends View {
     }
 
 
-    protected void onCellSelected(Cell cell) {
+    protected void onCellSelected(CellTile cell) {
         if (mOnCellSelectedListener != null) {
             mOnCellSelectedListener.onCellSelected(cell);
         }
@@ -425,13 +411,13 @@ public class SudokuBoardView extends View {
             float noteWidth = mCellWidth / 3f;
             for (int row = 0; row < sudokuGame.getLength(); row++) {
                 for (int col = 0; col < sudokuGame.getLength(); col++) {
-                    Cell Acell = sudokuGame.getSudoku().getCell(row, col);
+                    CellTile cell = cellTiles[row][col];
 
                     cellLeft = Math.round((col * mCellWidth) + paddingLeft);
                     cellTop = Math.round((row * mCellHeight) + paddingTop);
 
                     // draw read-only field background
-                    if (Acell.isGiven() && hasBackgroundColorReadOnly) {
+                    if (sudokuGame.isGiven(cell.getRow(), cell.getCol()) && hasBackgroundColorReadOnly) {
                         if (mBackgroundColorReadOnly.getColor() != NO_COLOR) {
                             canvas.drawRect(
                                     cellLeft, cellTop,
@@ -441,21 +427,22 @@ public class SudokuBoardView extends View {
                     }
 
                     // draw cell Text
-                    int value = Acell.getValue();
+                    int value = sudokuGame.getValue(cell.getRow(), cell.getCol());
                     if (value != 0) {
-                        Paint cellValuePaint = !Acell.isGiven() ? mCellValuePaint : mCellValueReadonlyPaint;
+                        Paint cellValuePaint = !sudokuGame.isGiven(cell.getRow(), cell.getCol()) ? mCellValuePaint : mCellValueReadonlyPaint;
 
-                        /*if (mHighlightWrongVals && !cell.isValid()) {
+
+                        if (mHighlightWrongVals && sudokuGame.showError(cell.getRow(), cell.getCol())) {
                             cellValuePaint = mCellValueInvalidPaint;
-                        }*///error highlighting
+                        }
                         canvas.drawText(Integer.toString(value),
                                 cellLeft + mNumberLeft,
                                 cellTop + mNumberTop - numberAscent,
                                 cellValuePaint);
                     } else {
-                        if (Acell.getPossibilityCount() > 0) {
+                        if (sudokuGame.getPossibilityCount(cell.getRow(), cell.getCol()) > 0) {
                             for (int n = 1; n <= 9; n++) {
-                                if (Acell.containsPossibility(n)) {
+                                if (sudokuGame.containsPossibility(cell.getRow(), cell.getCol(), n)) {
                                     int number = n - 1;
                                     int c = number % 3;
                                     int r = number / 3;
@@ -473,8 +460,8 @@ public class SudokuBoardView extends View {
 
             // highlight selected cell
             if (!mReadonly && mSelectedCell != null) {
-                cellLeft = Math.round((mSelectedCell.getId()%sudokuGame.getLength()) * mCellWidth) + paddingLeft;
-                cellTop = Math.round((mSelectedCell.getId()/sudokuGame.getLength()) * mCellHeight) + paddingTop;
+                cellLeft = Math.round(mSelectedCell.getCol() * mCellWidth) + paddingLeft;
+                cellTop = Math.round(mSelectedCell.getRow() * mCellHeight) + paddingTop;
                 canvas.drawRect(
                         cellLeft, cellTop,
                         cellLeft + mCellWidth, cellTop + mCellHeight,
@@ -484,8 +471,8 @@ public class SudokuBoardView extends View {
             // visually highlight cell under the finger (to cope with touch screen
             // imprecision)
             if (mHighlightTouchedCell && mTouchedCell != null) {
-                cellLeft = Math.round((mTouchedCell.getId()%sudokuGame.getLength()) * mCellWidth) + paddingLeft;
-                cellTop = Math.round((mTouchedCell.getId()/sudokuGame.getLength()) * mCellHeight) + paddingTop;
+                cellLeft = Math.round(mTouchedCell.getCol() * mCellWidth) + paddingLeft;
+                cellTop = Math.round(mTouchedCell.getRow() * mCellHeight) + paddingTop;
                 canvas.drawRect(
                         cellLeft, paddingTop,
                         cellLeft + mCellWidth, height,
@@ -698,7 +685,7 @@ public class SudokuBoardView extends View {
      * @param y
      * @return
      */
-    private Cell getCellAtPoint(int x, int y) {
+    private CellTile getCellAtPoint(int x, int y) {
         // take into account padding
         int lx = x - getPaddingLeft();
         int ly = y - getPaddingTop();
@@ -708,7 +695,7 @@ public class SudokuBoardView extends View {
 
         if (col >= 0 && col < sudokuGame.getLength()
                 && row >= 0 && row < sudokuGame.getLength()) {
-            return sudokuGame.getSudoku().getCell(row, col);
+            return cellTiles[row][col];
         } else {
             return null;
         }
@@ -720,7 +707,7 @@ public class SudokuBoardView extends View {
      * @author romario
      */
     public interface OnCellTappedListener {
-        void onCellTapped(Cell cell);
+        void onCellTapped(CellTile cell);
     }
 
     /**
@@ -729,7 +716,7 @@ public class SudokuBoardView extends View {
      * @author romario
      */
     public interface OnCellSelectedListener {
-        void onCellSelected(Cell cell);
+        void onCellSelected(CellTile cell);
     }
 
 //	private String getMeasureSpecModeString(int mode) {

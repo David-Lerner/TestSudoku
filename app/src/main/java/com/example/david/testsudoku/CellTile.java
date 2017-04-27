@@ -8,12 +8,12 @@ import com.david.completesudoku.Selectable;
 
 public class CellTile implements Selectable {
 
-    private int targetI, targetJ;
+    private int col, row;
     private boolean selected;
 
-    public CellTile(int targetI, int targetJ) {
-        this.targetI = targetI;
-        this.targetJ = targetJ;
+    public CellTile(int row, int col) {
+        this.row = row;
+        this.col = col;
         this.selected = false;
     }
 
@@ -27,12 +27,12 @@ public class CellTile implements Selectable {
         //todo
     }
 
-    public int getTargetI() {
-        return targetI;
+    public int getCol() {
+        return col;
     }
 
-    public int getTargetJ() {
-        return targetJ;
+    public int getRow() {
+        return row;
     }
 
     public boolean isSelected() {
