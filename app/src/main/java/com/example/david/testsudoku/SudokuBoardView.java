@@ -32,7 +32,7 @@ public class SudokuBoardView extends View {
     private static final int NO_COLOR = 0;
 
     private SudokuGame sudokuGame;
-    private CellTile[][] cellTiles;
+    private CellCollection cells;
 
     private float mCellWidth;
     private float mCellHeight;
@@ -202,13 +202,16 @@ public class SudokuBoardView extends View {
     public void setSudokuGame(SudokuGame game) {
         sudokuGame = game;
     }
+    public CellCollection getCells() {
+        return cells;
+    }
 
-    public void setCellTiles(CellTile[][] cellTiles) {
-        this.cellTiles = cellTiles;
+    public void setCells(CellCollection cells) {
+        this.cells = cells;
 
-        if (cellTiles != null) {
+        if (cells != null) {
             if (!mReadonly) {
-                mSelectedCell = cellTiles[0][0]; // first cell will be selected by default
+                mSelectedCell = cells.getCellTile(0,0); // first cell will be selected by default
                 onCellSelected(mSelectedCell);
             }
 
@@ -411,7 +414,7 @@ public class SudokuBoardView extends View {
             float noteWidth = mCellWidth / 3f;
             for (int row = 0; row < sudokuGame.getLength(); row++) {
                 for (int col = 0; col < sudokuGame.getLength(); col++) {
-                    CellTile cell = cellTiles[row][col];
+                    CellTile cell = cells.getCellTile(row, col);
 
                     cellLeft = Math.round((col * mCellWidth) + paddingLeft);
                     cellTop = Math.round((row * mCellHeight) + paddingTop);
@@ -695,7 +698,7 @@ public class SudokuBoardView extends View {
 
         if (col >= 0 && col < sudokuGame.getLength()
                 && row >= 0 && row < sudokuGame.getLength()) {
-            return cellTiles[row][col];
+            return cells.getCellTile(row, col);
         } else {
             return null;
         }
