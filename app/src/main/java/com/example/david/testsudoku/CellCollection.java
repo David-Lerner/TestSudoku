@@ -3,10 +3,6 @@ package com.example.david.testsudoku;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by David on 4/27/2017.
- */
-
 public class CellCollection {
 
     private CellTile[][] cellTiles;
@@ -21,6 +17,10 @@ public class CellCollection {
 
     public CellTile getCellTile(int row, int column) {
         return cellTiles[row][column];
+    }
+
+    public void updateCells() {
+        onChange();
     }
 
     public void addOnChangeListener(OnChangeListener listener) {

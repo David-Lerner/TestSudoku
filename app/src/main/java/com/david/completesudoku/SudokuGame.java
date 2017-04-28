@@ -88,6 +88,28 @@ public class SudokuGame {
         this.solved = null;
     }
 
+    public void reset() {
+        int[][] newPuzzle = new int[length][length];
+        for (int i = 0; i < length; ++i) {
+            for (int j = 0; j < length; ++j) {
+                if (sudoku.getCell(i, j).isGiven()) {
+                    newPuzzle[i][j] = sudoku.getCell(i, j).getValue();
+                }
+            }
+        }
+        sudoku = new Sudoku(newPuzzle);
+        highlighted = new boolean[length][length];
+        undo.clear();
+        redo.clear();
+        elapsed = 0;
+        status = NEW;
+        score = 0;
+        answers = new boolean[length*length];
+        errors = new boolean[length*length+1][length];
+        paused = true;
+        begin();
+    }
+
     public Sudoku getSudoku() {
         return sudoku;
     }
@@ -278,13 +300,38 @@ public class SudokuGame {
 
     }
 
+    public void setEraseAction(int targetI, int targetJ) {
+        if (targetI < 0 || targetJ < 0 || targetI >= length || targetJ >= length) {
+            throw new IllegalArgumentException();
+        }
+        Cell c = sudoku.getCell(targetI, targetJ);
+        if (c.isGiven() || (c.getValue() == 0 && c.getPossibilityCount() == 0) || status.equals(COMPLETED)) {
+            return;
+        }
+        Action action, reverse;
+        if (c.getValue() > 0) {
+            action = new SetCellAction(targetI, targetJ, 0);
+            reverse = new SetCellAction(targetI, targetJ, c.getValue());
+        } else {
+            action = new SetCellAction(targetI, targetJ, 0);
+            reverse = new FillCellAction(targetI, targetJ, 0, c.getPossibilities());
+        }
+        action.apply();
+        undo.push(new ActionPair(action, reverse));
+        redo.clear();
+    }
+
     public void setValueAction(int targetI, int targetJ, int value) {
-        if (targetI < 0 || targetJ < 0 || value < 0 ||
+        if (value == 0) {
+            setEraseAction(targetI, targetJ);
+            return;
+        }
+        if (targetI < 0 || targetJ < 0 || value < 1 ||
                 targetI >= length || targetJ >= length || value > length) {
             throw new IllegalArgumentException();
         }
         Cell c = sudoku.getCell(targetI, targetJ);
-        if (c.isGiven() || (value == 0 && c.getValue() == 0) || status.equals(COMPLETED)) {
+        if (c.isGiven() || status.equals(COMPLETED)) {
             return;
         }
         Action action, reverse;
@@ -327,6 +374,10 @@ public class SudokuGame {
     }
 
     public void setPossibleAction(int targetI, int targetJ, int value) {
+        if (value == 0) {
+            setEraseAction(targetI, targetJ);
+            return;
+        }
         if (targetI < 0 || targetJ < 0 || value < 1 ||
                 targetI >= length || targetJ >= length || value > length) {
             throw new IllegalArgumentException();
@@ -345,6 +396,28 @@ public class SudokuGame {
         } else {
             action = new SetPossibilityAction(targetI, targetJ, value, true);
             reverse = new SetPossibilityAction(targetI, targetJ, value, false);
+        }
+        action.apply();
+        undo.push(new ActionPair(action, reverse));
+        redo.clear();
+    }
+
+    public void setPossibilitiesAction(int targetI, int targetJ, boolean[] possibilities) {
+
+        if (targetI < 0 || targetJ < 0 || targetI >= length || targetJ >= length) {
+            throw new IllegalArgumentException();
+        }
+        Cell c = sudoku.getCell(targetI, targetJ);
+        if (c.isGiven() || status.equals(COMPLETED)) {
+            return;
+        }
+        Action action, reverse;
+        if (c.getPossibilityCount() == 0) {
+            action = new FillCellAction(targetI, targetJ, 0, possibilities);
+            reverse = new SetCellAction(targetI, targetJ, c.getValue());
+        } else {
+            action = new FillCellAction(targetI, targetJ, 0, possibilities);
+            reverse = new FillCellAction(targetI, targetJ, 0, c.getPossibilities());
         }
         action.apply();
         undo.push(new ActionPair(action, reverse));
@@ -476,6 +549,13 @@ public class SudokuGame {
             throw new IllegalArgumentException();
         }
         return sudoku.getCell(i, j).containsPossibility(value);
+    }
+
+    public boolean[] getPossibilities(int i, int j) {
+        if (i < 0 || j < 0 || i >= length || j >= length) {
+            throw new IllegalArgumentException();
+        }
+        return sudoku.getCell(i, j).getPossibilities();
     }
 
     public int getPossibilityCount(int i, int j) {
@@ -684,4 +764,11 @@ public class SudokuGame {
         return solved[targetI][targetJ];
     }
 
+    public boolean hasUndo() {
+        return !undo.isEmpty();
+    }
+
+    public boolean hasRedo() {
+        return !redo.isEmpty();
+    }
 }

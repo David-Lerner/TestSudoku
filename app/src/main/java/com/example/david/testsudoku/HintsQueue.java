@@ -1,22 +1,3 @@
-/* 
- * Copyright (C) 2009 Roman Masek
- * 
- * This file is part of OpenSudoku.
- * 
- * OpenSudoku is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * OpenSudoku is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with OpenSudoku.  If not, see <http://www.gnu.org/licenses/>.
- * 
- */
 
 package com.example.david.testsudoku;
 
@@ -36,7 +17,6 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.preference.PreferenceManager;
 
 public class HintsQueue {
-	// TODO: should be persisted in activity's state
 	private Queue<Message> mMessages;
 
 	private static final String PREF_FILE_NAME = "hints";
@@ -135,10 +115,7 @@ public class HintsQueue {
 	public void showOneTimeHint(String key, int titleResID, int messageResID, Object... args) {
 		if (mOneTimeHintsEnabled) {
 
-			// FIXME: remove in future versions
-			// Before 1.0.0, hintKey was created from messageResID. This ID has in 1.0.0 changed.
-			// From 1.0.0, hintKey is based on key, to be backward compatible, check for old
-			// hint keys.
+			// legacy
 			if (legacyHintsWereDisplayed()) {
 				return;
 			}

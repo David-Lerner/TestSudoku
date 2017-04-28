@@ -2,10 +2,6 @@ package com.example.david.testsudoku;
 
 import com.david.completesudoku.Selectable;
 
-/**
- * Created by David on 4/27/2017.
- */
-
 public class CellTile implements Selectable {
 
     private int col, row;

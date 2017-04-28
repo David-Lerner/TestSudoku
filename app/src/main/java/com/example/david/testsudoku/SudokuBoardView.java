@@ -1,17 +1,12 @@
 package com.example.david.testsudoku;
 
-
-/*import org.moire.opensudoku.R;
-import org.moire.opensudoku.game.Cell;
-import org.moire.opensudoku.game.CellCollection;
-import org.moire.opensudoku.game.CellNote;
-import org.moire.opensudoku.game.SudokuGame;
-import org.moire.opensudoku.game.CellCollection.OnChangeListener;*/
+import com.example.david.testsudoku.CellCollection.OnChangeListener;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import com.david.completesudoku.SudokuGame;
@@ -19,11 +14,12 @@ import com.david.completesudoku.SudokuGame;
 /**
  * Sudoku board widget.
  *
- * @author romario
  */
 public class SudokuBoardView extends View {
 
     public static final int DEFAULT_BOARD_SIZE = 100;
+
+    private static final long DOUBLE_CLICK_TIME_DELTA = 300;//milliseconds
 
     /**
      * "Color not set" value. (In relation to {@link Color}, it is in fact black color with
@@ -38,7 +34,7 @@ public class SudokuBoardView extends View {
     private float mCellHeight;
 
     private CellTile mTouchedCell;
-    // TODO: should I synchronize access to mSelectedCell?
+    //maybe synchronize access
     private CellTile mSelectedCell;
 
     private boolean mReadonly = false;
@@ -62,20 +58,19 @@ public class SudokuBoardView extends View {
     private Paint mBackgroundColorReadOnly;
     private Paint mBackgroundColorTouched;
     private Paint mBackgroundColorSelected;
+    private Paint highlightedPaint;
 
     private Paint mCellValueInvalidPaint;
+
+    private long time;
+    boolean firstTouch = false;
 
     public SudokuBoardView(Context context) {
         this(context, null);
     }
 
-    //	public SudokuBoardView(Context context, AttributeSet attrs) {
-    //		this(context, attrs, R.attr.sudokuBoardViewStyle);
-    //	}
-
-    // TODO: do I need an defStyle?
-    public SudokuBoardView(Context context, AttributeSet attrs/*, int defStyle*/) {
-        super(context, attrs/*, defStyle*/);
+    public SudokuBoardView(Context context, AttributeSet attrs) {
+        super(context, attrs);
 
         setFocusable(true);
         setFocusableInTouchMode(true);
@@ -90,6 +85,7 @@ public class SudokuBoardView extends View {
         mBackgroundColorReadOnly = new Paint();
         mBackgroundColorTouched = new Paint();
         mBackgroundColorSelected = new Paint();
+        highlightedPaint = new Paint();
 
         mCellValuePaint.setAntiAlias(true);
         mCellValueReadonlyPaint.setAntiAlias(true);
@@ -97,32 +93,20 @@ public class SudokuBoardView extends View {
         mCellNotePaint.setAntiAlias(true);
         mCellValueInvalidPaint.setColor(Color.RED);
 
-        //TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.SudokuBoardView/*, defStyle, 0*/);
-
-        /*setLineColor(a.getColor(R.styleable.SudokuBoardView_lineColor, Color.BLACK));
-        setSectorLineColor(a.getColor(R.styleable.SudokuBoardView_sectorLineColor, Color.BLACK));
-        setTextColor(a.getColor(R.styleable.SudokuBoardView_textColor, Color.BLACK));
-        setTextColorReadOnly(a.getColor(R.styleable.SudokuBoardView_textColorReadOnly, Color.BLACK));
-        setTextColorNote(a.getColor(R.styleable.SudokuBoardView_textColorNote, Color.BLACK));
-        setBackgroundColor(a.getColor(R.styleable.SudokuBoardView_backgroundColor, Color.WHITE));
-        setBackgroundColorSecondary(a.getColor(R.styleable.SudokuBoardView_backgroundColorSecondary, NO_COLOR));
-        setBackgroundColorReadOnly(a.getColor(R.styleable.SudokuBoardView_backgroundColorReadOnly, NO_COLOR));
-        setBackgroundColorTouched(a.getColor(R.styleable.SudokuBoardView_backgroundColorTouched, Color.rgb(50, 50, 255)));
-        setBackgroundColorSelected(a.getColor(R.styleable.SudokuBoardView_backgroundColorSelected, Color.YELLOW));
-
-        a.recycle();*/
-
-        //D: manual styles
-        setLineColor(Color.BLACK);
+        setLineColor(Color.DKGRAY);
         setSectorLineColor(Color.BLACK);
         setTextColor(Color.BLACK);
-        setTextColorReadOnly( Color.BLACK);
+        setTextColorReadOnly(Color.BLUE);
         setTextColorNote(Color.BLACK);
-        setBackgroundColor(Color.WHITE);
-        setBackgroundColorSecondary( NO_COLOR);
+        setBackgroundColor(Color.LTGRAY);
+        setBackgroundColorSecondary(Color.WHITE);
         setBackgroundColorReadOnly(NO_COLOR);
-        setBackgroundColorTouched( Color.rgb(50, 50, 255));
-        setBackgroundColorSelected( Color.YELLOW);
+        setBackgroundColorTouched(Color.rgb(50, 50, 255));
+        setBackgroundColorSelected(Color.CYAN);
+        setHighlightedPaint(Color.YELLOW);
+
+        time = System.currentTimeMillis();
+        firstTouch = false;
     }
 
     public int getLineColor() {
@@ -199,9 +183,23 @@ public class SudokuBoardView extends View {
         mBackgroundColorSelected.setAlpha(100);
     }
 
+    public Paint getHighlightedPaint() {
+        return highlightedPaint;
+    }
+
+    public void setHighlightedPaint(int color) {
+        highlightedPaint.setColor(color);
+        highlightedPaint.setAlpha(100);
+    }
+
     public void setSudokuGame(SudokuGame game) {
         sudokuGame = game;
     }
+
+    public SudokuGame getSudokuGame() {
+        return sudokuGame;
+    }
+
     public CellCollection getCells() {
         return cells;
     }
@@ -215,12 +213,12 @@ public class SudokuBoardView extends View {
                 onCellSelected(mSelectedCell);
             }
 
-            /*cellTiles.addOnChangeListener(new OnChangeListener() {
+            cells.addOnChangeListener(new OnChangeListener() {
                 @Override
                 public void onChange() {
                     postInvalidate();
                 }
-            });*/
+            });
         }
 
         postInvalidate();
@@ -388,7 +386,6 @@ public class SudokuBoardView extends View {
         // some notes:
         // Drawable has its own draw() method that takes your Canvas as an arguement
 
-        // TODO: I don't get this, why do I need to substract padding only from one side?
         int width = getWidth() - getPaddingRight();
         int height = getHeight() - getPaddingBottom();
 
@@ -426,6 +423,16 @@ public class SudokuBoardView extends View {
                                     cellLeft, cellTop,
                                     cellLeft + mCellWidth, cellTop + mCellHeight,
                                     mBackgroundColorReadOnly);
+                        }
+                    }
+
+                    //draw highlighted background
+                    if (sudokuGame.isHighlighted(cell.getRow(),cell.getCol())) {
+                        if (highlightedPaint.getColor() != NO_COLOR) {
+                            canvas.drawRect(
+                                    cellLeft, cellTop,
+                                    cellLeft + mCellWidth, cellTop + mCellHeight,
+                                    highlightedPaint);
                         }
                     }
 
@@ -525,6 +532,21 @@ public class SudokuBoardView extends View {
 
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
+                    if(event.getAction() == event.ACTION_DOWN){
+                        if(firstTouch && (System.currentTimeMillis() - time) <= 300) {
+                            Log.e("** DOUBLE TAP**"," second tap ");
+                            if (mSelectedCell == getCellAtPoint(x, y)) {
+                                sudokuGame.setHighlighted(mSelectedCell.getRow(), mSelectedCell.getCol(),
+                                        !sudokuGame.isHighlighted(mSelectedCell.getRow(), mSelectedCell.getCol()));
+                            }
+                            firstTouch = false;
+
+                        } else {
+                            firstTouch = true;
+                            time = System.currentTimeMillis();
+                            Log.e("** SINGLE  TAP**"," First Tap time  "+time);
+                        }
+                    }
                 case MotionEvent.ACTION_MOVE:
                     mTouchedCell = getCellAtPoint(x, y);
                     break;
@@ -550,136 +572,6 @@ public class SudokuBoardView extends View {
 
         return !mReadonly;
     }
-/*
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (!mReadonly) {
-            switch (keyCode) {
-                case KeyEvent.KEYCODE_DPAD_UP:
-                    return moveCellSelection(0, -1);
-                case KeyEvent.KEYCODE_DPAD_RIGHT:
-                    return moveCellSelection(1, 0);
-                case KeyEvent.KEYCODE_DPAD_DOWN:
-                    return moveCellSelection(0, 1);
-                case KeyEvent.KEYCODE_DPAD_LEFT:
-                    return moveCellSelection(-1, 0);
-                case KeyEvent.KEYCODE_0:
-                case KeyEvent.KEYCODE_SPACE:
-                case KeyEvent.KEYCODE_DEL:
-                    // clear value in selected cell
-                    // TODO: I'm not really sure that this is thread-safe
-                    if (mSelectedCell != null) {
-                        if (event.isShiftPressed() || event.isAltPressed()) {
-                            setCellNote(mSelectedCell, CellNote.EMPTY);
-                        } else {
-                            setCellValue(mSelectedCell, 0);
-                            moveCellSelectionRight();
-                        }
-                    }
-                    return true;
-                case KeyEvent.KEYCODE_DPAD_CENTER:
-                    if (mSelectedCell != null) {
-                        onCellTapped(mSelectedCell);
-                    }
-                    return true;
-            }
-
-            if (keyCode >= KeyEvent.KEYCODE_1 && keyCode <= KeyEvent.KEYCODE_9) {
-                int selNumber = keyCode - KeyEvent.KEYCODE_0;
-                Cell cell = mSelectedCell;
-
-                if (event.isShiftPressed() || event.isAltPressed()) {
-                    // add or remove number in cell's note
-                    setCellNote(cell, cell.getNote().toggleNumber(selNumber));
-                } else {
-                    // enter number in cell
-                    setCellValue(cell, selNumber);
-                    moveCellSelectionRight();
-                }
-                return true;
-            }
-        }
-
-
-        return false;
-    }*/
-
-
-    /**
-     * Moves selected cell by one cell to the right. If edge is reached, selection
-     * skips on beginning of another line.
-     */
-    /*public void moveCellSelectionRight() {
-        if (!moveCellSelection(1, 0)) {
-            int selRow = mSelectedCell.getRowIndex();
-            selRow++;
-            if (!moveCellSelectionTo(selRow, 0)) {
-                moveCellSelectionTo(0, 0);
-            }
-        }
-        postInvalidate();
-    }
-
-    private void setCellValue(Cell cell, int value) {
-        if (cell.isEditable()) {
-            if (mGame != null) {
-                mGame.setCellValue(cell, value);
-            } else {
-                cell.setValue(value);
-            }
-        }
-    }
-
-    private void setCellNote(Cell cell, CellNote note) {
-        if (cell.isEditable()) {
-            if (mGame != null) {
-                mGame.setCellNote(cell, note);
-            } else {
-                cell.setNote(note);
-            }
-        }
-    }*/
-
-
-    /**
-     * Moves selected by vx cells right and vy cells down. vx and vy can be negative. Returns true,
-     * if new cell is selected.
-     *
-     * @param vx Horizontal offset, by which move selected cell.
-     * @param vy Vertical offset, by which move selected cell.
-     */
-    /*private boolean moveCellSelection(int vx, int vy) {
-        int newRow = 0;
-        int newCol = 0;
-
-        if (mSelectedCell != null) {
-            newRow = mSelectedCell.getRowIndex() + vy;
-            newCol = mSelectedCell.getColumnIndex() + vx;
-        }
-
-        return moveCellSelectionTo(newRow, newCol);
-    }*/
-
-
-    /**
-     * Moves selection to the cell given by row and column index.
-     *
-     * @param row Row index of cell which should be selected.
-     * @param col Columnd index of cell which should be selected.
-     * @return True, if cell was successfuly selected.
-     */
-    /*private boolean moveCellSelectionTo(int row, int col) {
-        if (col >= 0 && col < CellCollection.SUDOKU_SIZE
-                && row >= 0 && row < CellCollection.SUDOKU_SIZE) {
-            mSelectedCell = mCells.getCell(row, col);
-            onCellSelected(mSelectedCell);
-
-            postInvalidate();
-            return true;
-        }
-
-        return false;
-    }*/
 
     /**
      * Returns cell at given screen coordinates. Returns null if no cell is found.
@@ -707,7 +599,6 @@ public class SudokuBoardView extends View {
     /**
      * Occurs when user tap the cell.
      *
-     * @author romario
      */
     public interface OnCellTappedListener {
         void onCellTapped(CellTile cell);
@@ -716,31 +607,10 @@ public class SudokuBoardView extends View {
     /**
      * Occurs when user selects the cell.
      *
-     * @author romario
      */
     public interface OnCellSelectedListener {
         void onCellSelected(CellTile cell);
     }
-
-//	private String getMeasureSpecModeString(int mode) {
-//		String modeString = null;
-//		switch (mode) {
-//		case MeasureSpec.AT_MOST:
-//			modeString = "MeasureSpec.AT_MOST";
-//			break;
-//		case MeasureSpec.EXACTLY:
-//			modeString = "MeasureSpec.EXACTLY";
-//			break;
-//		case MeasureSpec.UNSPECIFIED:
-//			modeString = "MeasureSpec.UNSPECIFIED";
-//			break;
-//		}
-//
-//		if (modeString == null)
-//			modeString = new Integer(mode).toString();
-//
-//		return modeString;
-//	}
 
 }
 
