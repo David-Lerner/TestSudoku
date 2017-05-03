@@ -9,13 +9,16 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.ActionBar;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.david.completesudoku.Sudoku;
 import com.david.completesudoku.SudokuGame;
@@ -35,10 +38,19 @@ public class GameActivity extends AppCompatActivity {
     public static final int MENU_ITEM_FILL_IN_NOTES = Menu.FIRST + 2;
     public static final int MENU_ITEM_HELP = Menu.FIRST + 3;
     public static final int MENU_ITEM_SETTINGS = Menu.FIRST + 4;
+    public static final int MENU_ITEM_UNDO = Menu.FIRST + 5;
+    public static final int MENU_ITEM_REDO = Menu.FIRST + 6;
+    public static final int MENU_ITEM_SHOW_ERROR = Menu.FIRST + 7;
+    public static final int MENU_ITEM_SHOW_VALUE = Menu.FIRST + 8;
+    public static final int MENU_ITEM_SOLVE = Menu.FIRST + 9;
+    public static final int MENU_ITEM_SAVE = Menu.FIRST + 10;
+    public static final int MENU_ITEM_EXIT = Menu.FIRST + 11;
 
     private static final int DIALOG_RESTART = 1;
     private static final int DIALOG_WELL_DONE = 2;
-    private static final int DIALOG_CLEAR_NOTES = 3;
+    private static final int DIALOG_SOLVE = 3;
+    private static final int DIALOG_SAVE = 4;
+    private static final int DIALOG_EXIT = 5;
 
     private static final int REQUEST_SETTINGS = 1;
 
@@ -178,6 +190,9 @@ public class GameActivity extends AppCompatActivity {
             }
         };
         timerHandler.postDelayed(timerRunnable, 1000);
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setTitle(sudokuGame.getName());
     }
 
     @Override
@@ -232,16 +247,21 @@ public class GameActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
 
-        menu.add(0, MENU_ITEM_RESTART, 5, R.string.restart).setIcon(R.drawable.ic_restore);
-
+        menu.add(0, MENU_ITEM_UNDO, 0, R.string.undo).setIcon(R.drawable.ic_undo);
+        menu.add(0, MENU_ITEM_REDO, 1, R.string.redo).setIcon(R.drawable.ic_redo);
         menu.add(0, MENU_ITEM_CLEAR_ALL_NOTES, 2, R.string.clear_all_notes).setIcon(R.drawable.ic_delete);
+        menu.add(0, MENU_ITEM_FILL_IN_NOTES, 3, R.string.fill_in_notes).setIcon(R.drawable.ic_edit_grey);
+        menu.add(0, MENU_ITEM_SHOW_ERROR, 4, R.string.show_cell_error).setIcon(R.drawable.ic_info);
+        menu.add(0, MENU_ITEM_SHOW_VALUE, 5, R.string.show_cell_value).setIcon(R.drawable.ic_check);
+        menu.add(0, MENU_ITEM_SOLVE, 6, R.string.solve).setIcon(R.drawable.ic_grid);
+        menu.add(0, MENU_ITEM_RESTART, 7, R.string.restart).setIcon(R.drawable.ic_grid);
+        menu.add(0, MENU_ITEM_HELP, 8, R.string.help).setIcon(R.drawable.ic_help);
+        menu.add(0, MENU_ITEM_SETTINGS, 9, R.string.settings).setIcon(R.drawable.ic_settings);
+        menu.add(0, MENU_ITEM_SAVE, 10, R.string.save).setIcon(R.drawable.ic_save);
+        menu.add(0, MENU_ITEM_EXIT, 11, R.string.exit).setIcon(R.drawable.ic_back);
 
-        menu.add(0, MENU_ITEM_FILL_IN_NOTES, 1, R.string.fill_in_notes).setIcon(R.drawable.ic_edit_grey);
-
-        menu.add(0, MENU_ITEM_HELP, 7, R.string.help).setIcon(R.drawable.ic_help);
-
-        menu.add(0, MENU_ITEM_SETTINGS, 6, R.string.settings).setIcon(R.drawable.ic_settings);
-
+        menu.findItem(MENU_ITEM_UNDO).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        menu.findItem(MENU_ITEM_REDO).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         // Generate any additional actions that can be performed on the
         // overall list.  In a normal install, there are no additional
         // actions found here, but this allows other applications to extend
@@ -259,9 +279,33 @@ public class GameActivity extends AppCompatActivity {
         super.onPrepareOptionsMenu(menu);
 
         if (sudokuGame.getStatus().equals(SudokuGame.IN_PROGRESS)) {
+            if (sudokuGame.hasUndo()) {
+                menu.findItem(MENU_ITEM_UNDO).setEnabled(true);
+            } else {
+                menu.findItem(MENU_ITEM_UNDO).setEnabled(false);
+            }
+            if (sudokuGame.hasRedo()) {
+                menu.findItem(MENU_ITEM_REDO).setEnabled(true);
+            } else {
+                menu.findItem(MENU_ITEM_REDO).setEnabled(false);
+            }
+            if (mSudokuBoard.getHighlightWrongVals()) {
+                menu.findItem(MENU_ITEM_SHOW_ERROR).setEnabled(false);
+            } else {
+                menu.findItem(MENU_ITEM_SHOW_ERROR).setEnabled(true);
+            }
+            menu.findItem(MENU_ITEM_SHOW_VALUE).setEnabled(true);
+            menu.findItem(MENU_ITEM_RESTART).setEnabled(true);
+            menu.findItem(MENU_ITEM_SOLVE).setEnabled(true);
             menu.findItem(MENU_ITEM_CLEAR_ALL_NOTES).setEnabled(true);
             menu.findItem(MENU_ITEM_FILL_IN_NOTES).setEnabled(true);
         } else {
+            menu.findItem(MENU_ITEM_UNDO).setEnabled(false);
+            menu.findItem(MENU_ITEM_REDO).setEnabled(false);
+            menu.findItem(MENU_ITEM_SHOW_ERROR).setEnabled(false);
+            menu.findItem(MENU_ITEM_SHOW_VALUE).setEnabled(false);
+            menu.findItem(MENU_ITEM_RESTART).setEnabled(false);
+            menu.findItem(MENU_ITEM_SOLVE).setEnabled(false);
             menu.findItem(MENU_ITEM_CLEAR_ALL_NOTES).setEnabled(false);
             menu.findItem(MENU_ITEM_FILL_IN_NOTES).setEnabled(false);
         }
@@ -271,25 +315,66 @@ public class GameActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        CellTile cell;
         switch (item.getItemId()) {
             case MENU_ITEM_RESTART:
                 showDialog(DIALOG_RESTART);
                 return true;
             case MENU_ITEM_CLEAR_ALL_NOTES:
-                showDialog(DIALOG_CLEAR_NOTES);
+                sudokuGame.removePossibilities();
+                mSudokuBoard.getCells().updateCells();
                 return true;
             case MENU_ITEM_FILL_IN_NOTES:
-                //mSudokuGame.fillInNotes();
+                sudokuGame.showPossibilities();
+                mSudokuBoard.getCells().updateCells();
+                return true;
+            case MENU_ITEM_HELP:
+                mHintsQueue.showHint(R.string.help, R.string.help_text);
                 return true;
             case MENU_ITEM_SETTINGS:
                 Intent i = new Intent();
                 i.setClass(this, GameSettingsActivity.class);
                 startActivityForResult(i, REQUEST_SETTINGS);
                 return true;
-            case MENU_ITEM_HELP:
-                mHintsQueue.showHint(R.string.help, R.string.help_text);
+            case MENU_ITEM_UNDO:
+                sudokuGame.undo();
+                mSudokuBoard.getCells().updateCells();
                 return true;
-
+            case MENU_ITEM_REDO:
+                sudokuGame.redo();
+                mSudokuBoard.getCells().updateCells();
+                return true;
+            case MENU_ITEM_SHOW_ERROR:
+                cell = mSudokuBoard.getSelectedCell();
+                if (cell != null) {
+                    sudokuGame.showError(cell.getRow(), cell.getCol());
+                    mSudokuBoard.getCells().updateCells();
+                } else {
+                    Toast toast = Toast.makeText(this, R.string.no_cell, Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+                }
+                return true;
+            case MENU_ITEM_SHOW_VALUE:
+                cell = mSudokuBoard.getSelectedCell();
+                if (cell != null) {
+                    sudokuGame.showAnswer(cell.getRow(), cell.getCol());
+                    mSudokuBoard.getCells().updateCells();
+                } else {
+                    Toast toast = Toast.makeText(this, R.string.no_cell, Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+                }
+                return true;
+            case MENU_ITEM_SOLVE:
+                showDialog(DIALOG_SOLVE);
+                return true;
+            case MENU_ITEM_SAVE:
+                showDialog(DIALOG_SAVE);
+                return true;
+            case MENU_ITEM_EXIT:
+                showDialog(DIALOG_EXIT);
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -298,9 +383,82 @@ public class GameActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_SETTINGS:
+                sudokuGame.clearShownErrors();
                 restartActivity();
                 break;
         }
+    }
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        switch (id) {
+            case DIALOG_RESTART:
+                return new AlertDialog.Builder(this)
+                        .setIcon(R.drawable.ic_restore)
+                        .setTitle(R.string.app_name)
+                        .setMessage(R.string.restart_confirm)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                sudokuGame.reset();
+                                mSudokuBoard.getCells().updateCells();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, null)
+                        .create();
+            case DIALOG_WELL_DONE:
+                return new AlertDialog.Builder(this)
+                        .setIcon(R.drawable.ic_info)
+                        .setTitle(R.string.complete)
+                        .setMessage(String.format(getString(R.string.congrats), sudokuGame.getElapsedFormatted(), sudokuGame.getScore()))
+                        .setPositiveButton(android.R.string.ok, null)
+                        .create();
+            case DIALOG_SOLVE:
+                return new AlertDialog.Builder(this)
+                        .setIcon(R.drawable.ic_grid)
+                        .setTitle(R.string.app_name)
+                        .setMessage(R.string.solve_confirm)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                sudokuGame.showAllAnswers();
+                                mSudokuBoard.getCells().updateCells();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, null)
+                        .create();
+            case DIALOG_SAVE:
+                return new AlertDialog.Builder(this)
+                        .setIcon(R.drawable.ic_save)
+                        .setTitle(R.string.app_name)
+                        .setMessage(R.string.save_dialog)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                Toast toast = Toast.makeText(GameActivity.this, "Save not implemented", Toast.LENGTH_SHORT);
+                                toast.setGravity(Gravity.CENTER, 0, 0);
+                                toast.show();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, null)
+                        .create();
+            case DIALOG_EXIT:
+                return new AlertDialog.Builder(this)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle(R.string.app_name)
+                        .setMessage(R.string.back_confirm)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }
+
+                        })
+                        .setNegativeButton("No", null)
+                        .create();
+
+        }
+        return null;
     }
 
     /**
@@ -311,45 +469,4 @@ public class GameActivity extends AppCompatActivity {
         finish();
     }
 
-    @Override
-    protected Dialog onCreateDialog(int id) {
-        switch (id) {
-            case DIALOG_WELL_DONE:
-                return new AlertDialog.Builder(this)
-                        .setIcon(R.drawable.ic_info)
-                        .setTitle(R.string.well_done)
-                        .setMessage(getString(R.string.congrats, sudokuGame.getElapsedFormatted()))
-                        .setPositiveButton(android.R.string.ok, null)
-                        .create();
-            case DIALOG_RESTART:
-                return new AlertDialog.Builder(this)
-                        .setIcon(R.drawable.ic_restore)
-                        .setTitle(R.string.app_name)
-                        .setMessage(R.string.restart_confirm)
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                // Restart game
-                                sudokuGame.reset();
-                                mSudokuBoard.getCells().updateCells();
-                            }
-                        })
-                        .setNegativeButton(android.R.string.no, null)
-                        .create();
-            case DIALOG_CLEAR_NOTES:
-                //clear notes
-                return new AlertDialog.Builder(this)
-                        .setIcon(R.drawable.ic_delete)
-                        .setTitle(R.string.app_name)
-                        .setMessage(R.string.clear_all_notes_confirm)
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                //mSudokuGame.clearAllNotes();
-                            }
-                        })
-                        .setNegativeButton(android.R.string.no, null)
-                        .create();
-
-        }
-        return null;
-    }
 }

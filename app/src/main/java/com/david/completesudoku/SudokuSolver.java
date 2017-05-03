@@ -268,7 +268,7 @@ public class SudokuSolver {
         return solved;
     }
     
-    private int setPossibleValues(Cell c) {
+    public int setPossibleValues(Cell c) {
         int changes = 0;
         int preset = c.getPossibilityCount();
         //remove all possibilities that are already given in the cell's box, row, and column

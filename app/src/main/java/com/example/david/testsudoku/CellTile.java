@@ -15,12 +15,12 @@ public class CellTile implements Selectable {
 
     @Override
     public void setSelected(boolean selected) {
-        //todo
+        //nothing
     }
 
     @Override
     public void resolve(Selectable s) {
-        //todo
+        //nothing
     }
 
     public int getCol() {
@@ -34,4 +34,6 @@ public class CellTile implements Selectable {
     public boolean isSelected() {
         return selected;
     }
+
+
 }

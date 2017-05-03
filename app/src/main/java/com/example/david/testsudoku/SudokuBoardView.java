@@ -38,7 +38,7 @@ public class SudokuBoardView extends View {
     private CellTile mSelectedCell;
 
     private boolean mReadonly = false;
-    private boolean mHighlightWrongVals = true;
+    private boolean mHighlightWrongVals = false;
     private boolean mHighlightTouchedCell = true;
     private boolean mAutoHideTouchedCellHint = true;
 
@@ -406,6 +406,9 @@ public class SudokuBoardView extends View {
 
             boolean hasBackgroundColorReadOnly = mBackgroundColorReadOnly.getColor() != NO_COLOR;
 
+            if (mHighlightWrongVals) {
+                sudokuGame.showAllErrors();
+            }
             float numberAscent = mCellValuePaint.ascent();
             float noteAscent = mCellNotePaint.ascent();
             float noteWidth = mCellWidth / 3f;
@@ -442,7 +445,7 @@ public class SudokuBoardView extends View {
                         Paint cellValuePaint = !sudokuGame.isGiven(cell.getRow(), cell.getCol()) ? mCellValuePaint : mCellValueReadonlyPaint;
 
 
-                        if (mHighlightWrongVals && sudokuGame.showError(cell.getRow(), cell.getCol())) {
+                        if (sudokuGame.isErrorShownInCell(cell.getRow(), cell.getCol())) {
                             cellValuePaint = mCellValueInvalidPaint;
                         }
                         canvas.drawText(Integer.toString(value),
