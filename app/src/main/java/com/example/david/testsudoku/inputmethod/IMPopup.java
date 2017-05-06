@@ -80,7 +80,7 @@ public class IMPopup extends InputMethod {
 				//valuesUseCount = mGame.getCells().getValuesUseCount();
 				valuesUseCount = new HashMap<>();
 				for (int value = 1; value <= sudokuGame.getLength(); value++) {
-					valuesUseCount.put(value, 0);
+					valuesUseCount.put(value, sudokuGame.getValueCount(value));
 				}
 			}
 

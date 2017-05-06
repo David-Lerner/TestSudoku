@@ -159,13 +159,13 @@ public class IMPopupDialog extends Dialog {
 		//	mNumberButtons.get(number).setTextColor(Color.parseColor("#a5d6a7"));
 		} else {
 			// Set color of completed number but not selected
-			mNumberButtons.get(number).getBackground().setColorFilter(0xFF1B5E20, PorterDuff.Mode.MULTIPLY);
+			mNumberButtons.get(number).getBackground().setColorFilter(Color.BLUE, PorterDuff.Mode.MULTIPLY);
 			//mNumberButtons.get(number).setTextColor(Color.parseColor("#000000"));
 			//mNumberButtons.get(number).setBackgroundResource(R.drawable.btn_completed_bg);
 		}
 
 		// Set color of completed numbers in notes section
-        mNoteNumberButtons.get(number).getBackground().setColorFilter(0xFF1B5E20, PorterDuff.Mode.MULTIPLY);
+        mNoteNumberButtons.get(number).getBackground().setColorFilter(Color.BLUE, PorterDuff.Mode.MULTIPLY);
 		//mNoteNumberButtons.get(number).setBackgroundResource(R.drawable.btn_toggle_completed_bg);
 	}
 

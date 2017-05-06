@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -183,10 +184,12 @@ public class IMNumpad extends InputMethod {
 	private void update() {
 		switch (mEditMode) {
 			case MODE_EDIT_NOTE:
-				mSwitchNumNoteButton.setImageResource(R.drawable.ic_edit_white);
+				mSwitchNumNoteButton.setImageResource(R.drawable.ic_notes_white);
+				mSwitchNumNoteButton.getBackground().setColorFilter(Color.GRAY,PorterDuff.Mode.MULTIPLY);
 				break;
 			case MODE_EDIT_VALUE:
-				mSwitchNumNoteButton.setImageResource(R.drawable.ic_edit_grey);
+				mSwitchNumNoteButton.setImageResource(R.drawable.ic_notes);
+				mSwitchNumNoteButton.getBackground().setColorFilter(null);
 				break;
 		}
 
@@ -194,10 +197,9 @@ public class IMNumpad extends InputMethod {
 		Map<Integer, Integer> valuesUseCount = null;
 		if (mHighlightCompletedValues || mShowNumberTotals) {
             //below: get number of times each number shows up in puzzle; > 9 = not possible
-            //valuesUseCount = mBoard.getCells().getValuesUseCount();
             valuesUseCount = new HashMap<>();
             for (int value = 1; value <= sudokuGame.getLength(); value++) {
-                valuesUseCount.put(value, 0);
+                valuesUseCount.put(value, sudokuGame.getValueCount(value));
             }
 
         }
@@ -207,7 +209,7 @@ public class IMNumpad extends InputMethod {
 				boolean highlightValue = entry.getValue() >= sudokuGame.getLength();
 				Button b = mNumberButtons.get(entry.getKey());
 				if (highlightValue) {
-                    b.getBackground().setColorFilter(0xFF1B5E20, PorterDuff.Mode.MULTIPLY);
+                    b.getBackground().setColorFilter(Color.BLUE, PorterDuff.Mode.MULTIPLY);
 				} else {
                     b.getBackground().setColorFilter(null);
 				}

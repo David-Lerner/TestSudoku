@@ -37,6 +37,10 @@ public class SudokuGame {
     private boolean paused;
     private int[][] solved;
     private boolean[][] isErrorShown;
+    private int[] valueCount;
+    private int[][] rowValueCount;
+    private int[][] colValueCount;
+    private int[][] boxValueCount;
 
     /**
      * Creates a Sudoku game from given information
@@ -50,9 +54,11 @@ public class SudokuGame {
      * @param score the score the user has on the puzzle
      * @param answers the answers that were shown to the user
      * @param errors the errors that were shown to the user, last element is whether it was used
+     * @param hints the hints the user has been given
      */
-    public SudokuGame(Sudoku sudoku, boolean[][] highlighted, long currentTime, long elapsed,
-                      String name, String difficulty, String status, int score, boolean[] answers, boolean[][] errors, boolean[] hints) {
+    public SudokuGame(Sudoku sudoku, boolean[][] highlighted, long currentTime,
+                      long elapsed, String name, String difficulty, String status, int score,
+                      boolean[] answers, boolean[][] errors, boolean[] hints) {
         this.sudoku = sudoku;
         this.highlighted = highlighted;
         this.currentTime = currentTime;
@@ -69,6 +75,10 @@ public class SudokuGame {
         this.paused = true;
         this.solved = null;
         this.isErrorShown = new boolean[length][length];
+        this.valueCount = null;
+        this.rowValueCount = null;
+        this.colValueCount = null;
+        this.boxValueCount = null;
     }
 
     /**
@@ -92,6 +102,10 @@ public class SudokuGame {
         this.paused = true;
         this.solved = null;
         this.isErrorShown = new boolean[length][length];
+        this.valueCount = null;
+        this.rowValueCount = null;
+        this.colValueCount = null;
+        this.boxValueCount = null;
     }
 
     public void reset() {
@@ -115,6 +129,10 @@ public class SudokuGame {
         hints = new boolean[3];
         paused = true;
         isErrorShown = new boolean[length][length];
+        valueCount = null;
+        rowValueCount = null;
+        colValueCount = null;
+        boxValueCount = null;
         begin();
     }
 
@@ -182,9 +200,14 @@ public class SudokuGame {
 
         @Override
         public void apply() {
+            Cell c = sudoku.getCell(targetI, targetJ);
+            decrementValueCount(c.getValue());
+            incrementValueCount(value);
+            removeSubSudokuValue(targetI, targetJ, c.getValue());
+            addSubSudokuValue(targetI, targetJ, value);
             isErrorShown[targetI][targetJ] = false;
-            sudoku.getCell(targetI, targetJ).removePossibilities();
-            sudoku.getCell(targetI, targetJ).setValue(value);
+            c.removePossibilities();
+            c.setValue(value);
         }
 
         public int getTargetI() {
@@ -216,9 +239,14 @@ public class SudokuGame {
 
         @Override
         public void apply() {
+            Cell c = sudoku.getCell(targetI, targetJ);
+            decrementValueCount(c.getValue());
+            incrementValueCount(0);
+            removeSubSudokuValue(targetI, targetJ, c.getValue());
+            addSubSudokuValue(targetI, targetJ, 0);
             isErrorShown[targetI][targetJ] = false;
-            sudoku.getCell(targetI, targetJ).setPossibile(value, possible);
-            sudoku.getCell(targetI, targetJ).setValue(0);
+            c.setPossibile(value, possible);
+            c.setValue(0);
         }
 
         public int getTargetI() {
@@ -254,8 +282,12 @@ public class SudokuGame {
 
         @Override
         public void apply() {
-            isErrorShown[targetI][targetJ] = false;
             Cell c = sudoku.getCell(targetI, targetJ);
+            decrementValueCount(c.getValue());
+            incrementValueCount(value);
+            removeSubSudokuValue(targetI, targetJ, c.getValue());
+            addSubSudokuValue(targetI, targetJ, value);
+            isErrorShown[targetI][targetJ] = false;
             for (int n = 1; n <= length; ++n) {
                 c.setPossibile(n, possibles[n-1]);
             }
@@ -426,15 +458,7 @@ public class SudokuGame {
         resolve(action, reverse);
 
         //check if solved
-        int count = 0;
-        for (int i = 0; i < length; ++i) {
-            for (int j = 0; j < length; ++j) {
-                if (sudoku.getCell(i, j).getValue() != 0) {
-                    ++count;
-                }
-            }
-        }
-        if (count == length*length) {
+        if (getValueCount(0) == 0) {
             boolean valid = true;
             for (int i = 0; i < length; ++i) {
                 for (int j = 0; j < length; ++j) {
@@ -792,6 +816,9 @@ public class SudokuGame {
     }
 
     public void showAnswer(int i, int j) {
+        if (i < 0 || j < 0 || i >= length || j >= length) {
+            throw new IllegalArgumentException();
+        }
         answers[i*length+j] = true;
         setValueAction(i, j, getSolved(i, j));
     }
@@ -813,6 +840,9 @@ public class SudokuGame {
     }
 
     public boolean showError(int i, int j) {
+        if (i < 0 || j < 0 || i >= length || j >= length) {
+            throw new IllegalArgumentException();
+        }
         hints[1] = true;
         int value = sudoku.getCell(i, j).getValue();
         if (getSolved(i, j) != value && value != 0) {
@@ -824,6 +854,9 @@ public class SudokuGame {
     }
 
     public int getSolved(int targetI, int targetJ) {
+        if (targetI < 0 || targetJ < 0 || targetI >= length || targetJ >= length) {
+            throw new IllegalArgumentException();
+        }
         if (solved == null) {
             solved = new int[length][length];
             SudokuSolver s = new SudokuSolver(new Sudoku(sudoku));
@@ -888,4 +921,69 @@ public class SudokuGame {
         isErrorShown = new boolean[length][length];
     }
 
+    private void incrementValueCount(int value) {
+        getValueCount(value);
+        ++valueCount[value];
+    }
+
+    private void decrementValueCount(int value) {
+        getValueCount(value);
+        --valueCount[value];
+    }
+
+    public int getValueCount(int value) {
+        if (value < 0 || value > length) {
+            throw new IllegalArgumentException();
+        }
+        if (valueCount == null) {
+            valueCount = new int[length+1];
+            for (int i = 0; i < length; ++i) {
+                for (int j = 0; j < length; ++j) {
+                    ++valueCount[sudoku.getCell(i, j).getValue()];
+                }
+            }
+        }
+        return valueCount[value];
+    }
+
+    private void addSubSudokuValue(int i, int j, int value) {
+        int base = (int)Math.sqrt(length);
+        getSubSudokuValue(i, j, value);
+        ++rowValueCount[i][value];
+        ++colValueCount[j][value];
+        ++boxValueCount[(j/base+(i/base)*base)][value];
+    }
+
+    private void removeSubSudokuValue(int i, int j, int value) {
+        int base = (int)Math.sqrt(length);
+        getSubSudokuValue(i, j, value);
+        --rowValueCount[i][value];
+        --colValueCount[j][value];
+        --boxValueCount[(j/base+(i/base)*base)][value];
+    }
+
+    private int getSubSudokuValue(int targetI, int targetJ, int value) {
+        int base = (int)Math.sqrt(length);
+        if (rowValueCount == null) {
+            rowValueCount = new int[length][length+1];
+            colValueCount = new int[length][length+1];
+            boxValueCount = new int[length][length+1];
+            for (int i = 0; i < length; ++i) {
+                for (int j = 0; j < length; ++j) {
+                    int val = sudoku.getCell(i, j).getValue();
+                    ++rowValueCount[i][val];
+                    ++colValueCount[j][val];
+                    ++boxValueCount[(j/base+(i/base)*base)][val];
+                }
+            }
+        }
+        return Math.max(Math.max(rowValueCount[targetI][value], colValueCount[targetJ][value]), boxValueCount[(targetJ/base+(targetI/base)*base)][value]);
+    }
+
+    public boolean isValid(int i, int j) {
+        if (i < 0 || j < 0 || i >= length || j >= length) {
+            throw new IllegalArgumentException();
+        }
+        return getSubSudokuValue(i, j, sudoku.getCell(i, j).getValue()) < 2;
+    }
 }

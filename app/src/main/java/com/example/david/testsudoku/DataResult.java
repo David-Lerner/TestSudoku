@@ -10,6 +10,7 @@ public class DataResult {
 
     private static DataResult instance;
     private SudokuGame sudokuGame = null;
+    private int target = 0;
 
     protected DataResult() {
 
@@ -28,5 +29,13 @@ public class DataResult {
 
     public void setSudokuGame(SudokuGame sudokuGame) {
         this.sudokuGame = sudokuGame;
+    }
+
+    public int getTarget() {
+        return target;
+    }
+
+    public void setTarget(int target) {
+        this.target = target;
     }
 }

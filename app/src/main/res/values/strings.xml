@@ -12,7 +12,9 @@
 
     <string name="undo">Undo</string>
     <string name="redo">Redo</string>
+    <string name="actions">Actions</string>
     <string name="show_cell_error">Show cell error</string>
+    <string name="show_all_errors">Show all errors</string>
     <string name="show_cell_value">Show cell value</string>
     <string name="solve">Solve</string>
     <string name="save">Save</string>
@@ -32,7 +34,9 @@
 
     <string name="game_helpers">Game Helpers</string>
     <string name="highlight_wrong_values">Highlight wrong values</string>
-    <string name="highlight_wrong_values_summary">Highlight values which break rules of sudoku.</string>
+    <string name="highlight_wrong_values_summary">Highlight values which have a contradiction on board.</string>
+    <string name="show_number_totals">Show Number Totals</string>
+    <string name="show_number_totals_summary">Displays count of each number placed.</string>
     <string name="input_methods">Input Modes</string>
     <string name="popup">Popup</string>
     <string name="popup_summary">Edit cell value and note in popup.</string>
@@ -75,16 +79,17 @@
     <string name="im_disable_modes_hint">You don\'t have to use all input modes. You can disable
 		any of them in the game settings.\n
 	</string>
-    <string name="help_text"><b>Highlighting</b>\n\nTo highlight/unhighlight a cell, double tap it\n\n<b>Input modes</b>\n\nYou can switch between several input modes using button in the lower right corner of the
-		screen. You can also disable any input mode in game settings - it will be completely hidden then.\n\n<b>Popup
-			input mode</b>\n\nPopup dialog is shown when you tap the cell. You can edit cell\'s content using this
-		dialog.\n\n<b>Single Number input mode</b>\n\nFirst select any number button by pressing it. Then just tap on
-		cells in which you want to have selected number filled.\n\nUse
-		<i>Pencil</i>
-		button to toggle between cell\'s value and note editing.\n\n<b>Numpad input mode</b>\n\nButtons act as a
-		standard numeric keyboard.\n\nUse
-		<i>Pencil</i>
-		button to toggle between cell\'s value and note editing.\n
+    <string name="help_text"><b>Highlighting</b>\n\nYou can highlight or unhighlight a cell by double tapping it\n\n
+        <b>Actions</b>\n\nThe actions tab in the menu gives you several actions to help you solve the puzzle.
+        Be warned that using these actions may reduce your score.\n\n
+        <b>Input modes</b>\n\nYou can switch between several input modes using button in the lower right corner of the
+		screen. You can also disable any input mode in game settings.\n\n
+        <b>Popup input mode</b>\n\nA popup dialog is shown when you tap the cell. You can edit cell\'s content using this dialog.\n\n
+        <b>Single Number input mode</b>\n\nFirst select any number button by pressing it. Then just tap on
+		cells in which you want to have selected number filled.\n\nUse the notes
+		button to toggle between cell\'s value and note editing.\n\n
+        <b>Numpad input mode</b>\n\nButtons act as a standard numeric keyboard.\n\n
+        Use the notes button to toggle between cell\'s value and note editing.\n
 	</string>
 
 

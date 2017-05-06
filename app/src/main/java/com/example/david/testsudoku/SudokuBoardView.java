@@ -38,7 +38,7 @@ public class SudokuBoardView extends View {
     private CellTile mSelectedCell;
 
     private boolean mReadonly = false;
-    private boolean mHighlightWrongVals = false;
+    private boolean mHighlightWrongVals = true;
     private boolean mHighlightTouchedCell = true;
     private boolean mAutoHideTouchedCellHint = true;
 
@@ -224,6 +224,16 @@ public class SudokuBoardView extends View {
         postInvalidate();
     }
 
+    public void setTarget(int target) {
+        if (cells != null && !mReadonly) {
+            mSelectedCell = cells.getCellTile(target/sudokuGame.getLength(),target%sudokuGame.getLength());
+        }
+    }
+
+    public int getTarget() {
+        return mSelectedCell.getRow()*sudokuGame.getLength()+mSelectedCell.getCol();
+    }
+
     public CellTile getSelectedCell() {
         return mSelectedCell;
     }
@@ -406,9 +416,6 @@ public class SudokuBoardView extends View {
 
             boolean hasBackgroundColorReadOnly = mBackgroundColorReadOnly.getColor() != NO_COLOR;
 
-            if (mHighlightWrongVals) {
-                sudokuGame.showAllErrors();
-            }
             float numberAscent = mCellValuePaint.ascent();
             float noteAscent = mCellNotePaint.ascent();
             float noteWidth = mCellWidth / 3f;
@@ -442,11 +449,14 @@ public class SudokuBoardView extends View {
                     // draw cell Text
                     int value = sudokuGame.getValue(cell.getRow(), cell.getCol());
                     if (value != 0) {
-                        Paint cellValuePaint = !sudokuGame.isGiven(cell.getRow(), cell.getCol()) ? mCellValuePaint : mCellValueReadonlyPaint;
+                        Paint cellValuePaint = mCellValuePaint;
 
-
-                        if (sudokuGame.isErrorShownInCell(cell.getRow(), cell.getCol())) {
+                        if (sudokuGame.isErrorShownInCell(cell.getRow(), cell.getCol()) ||
+                                (mHighlightWrongVals && !sudokuGame.isValid(cell.getRow(), cell.getCol()))) {
                             cellValuePaint = mCellValueInvalidPaint;
+                        }
+                        if (sudokuGame.isGiven(cell.getRow(), cell.getCol())) {
+                            cellValuePaint = mCellValueReadonlyPaint;
                         }
                         canvas.drawText(Integer.toString(value),
                                 cellLeft + mNumberLeft,

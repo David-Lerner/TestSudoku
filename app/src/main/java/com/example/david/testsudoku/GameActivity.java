@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -33,18 +34,24 @@ public class GameActivity extends AppCompatActivity {
 
     private static final String TAG = "IMControlPanel";
 
-    public static final int MENU_ITEM_RESTART = Menu.FIRST;
-    public static final int MENU_ITEM_CLEAR_ALL_NOTES = Menu.FIRST + 1;
-    public static final int MENU_ITEM_FILL_IN_NOTES = Menu.FIRST + 2;
-    public static final int MENU_ITEM_HELP = Menu.FIRST + 3;
-    public static final int MENU_ITEM_SETTINGS = Menu.FIRST + 4;
-    public static final int MENU_ITEM_UNDO = Menu.FIRST + 5;
-    public static final int MENU_ITEM_REDO = Menu.FIRST + 6;
-    public static final int MENU_ITEM_SHOW_ERROR = Menu.FIRST + 7;
-    public static final int MENU_ITEM_SHOW_VALUE = Menu.FIRST + 8;
-    public static final int MENU_ITEM_SOLVE = Menu.FIRST + 9;
-    public static final int MENU_ITEM_SAVE = Menu.FIRST + 10;
-    public static final int MENU_ITEM_EXIT = Menu.FIRST + 11;
+
+    public static final int MENU_ITEM_UNDO = Menu.FIRST;
+    public static final int MENU_ITEM_REDO = Menu.FIRST + 1;
+    public static final int MENU_ITEM_ACTION_MENU = Menu.FIRST + 2;
+    public static final int MENU_ITEM_CLEAR_ALL_NOTES = Menu.FIRST + 3;
+    public static final int MENU_ITEM_FILL_IN_NOTES = Menu.FIRST + 4;
+    public static final int MENU_ITEM_SHOW_ERROR = Menu.FIRST + 5;
+    public static final int MENU_ITEM_SHOW_ALL_ERRORS = Menu.FIRST + 6;
+    public static final int MENU_ITEM_SHOW_VALUE = Menu.FIRST + 7;
+    public static final int MENU_ITEM_SOLVE = Menu.FIRST + 8;
+    public static final int MENU_ITEM_RESTART = Menu.FIRST + 9;
+    public static final int MENU_ITEM_HELP = Menu.FIRST + 10;
+    public static final int MENU_ITEM_SETTINGS = Menu.FIRST + 11;
+    public static final int MENU_ITEM_SAVE = Menu.FIRST + 12;
+    public static final int MENU_ITEM_EXIT = Menu.FIRST + 13;
+
+
+
 
     private static final int DIALOG_RESTART = 1;
     private static final int DIALOG_WELL_DONE = 2;
@@ -77,6 +84,9 @@ public class GameActivity extends AppCompatActivity {
     private SudokuGenerator sudokuGenerator;
     private SudokuGame sudokuGame;
     private CellCollection cells;
+
+    //for persisting
+    private DataResult dataResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,10 +148,12 @@ public class GameActivity extends AppCompatActivity {
         sudokuGenerator = new SudokuGenerator();
 
         //persist data on activity restarts
-        sudokuGame = DataResult.getInstance().getSudokuGame();
+        dataResult = DataResult.getInstance();
+        sudokuGame = dataResult.getSudokuGame();
         if (sudokuGame == null) {
+            //change to return to previous screen
             sudokuGame = new SudokuGame(new Sudoku(model));
-            DataResult.getInstance().setSudokuGame(sudokuGame);
+            dataResult.setSudokuGame(sudokuGame);
         }
 
         mSudokuBoard.setSudokuGame(sudokuGame);
@@ -154,6 +166,13 @@ public class GameActivity extends AppCompatActivity {
         }
         cells = new CellCollection(cellTiles);
         mSudokuBoard.setCells(cells);
+        mSudokuBoard.setTarget(dataResult.getTarget());
+        cells.addOnChangeListener(new CellCollection.OnChangeListener() {
+            @Override
+            public void onChange() {
+                invalidateOptionsMenu();
+            }
+        });
 
         //input
         mIMControlPanel = (IMControlPanel) findViewById(R.id.input_methods);
@@ -229,7 +248,7 @@ public class GameActivity extends AppCompatActivity {
         mIMPopup.setEnabled(gameSettings.getBoolean("im_popup", true));
         mIMSingleNumber.setEnabled(gameSettings.getBoolean("im_single_number", true));
         mIMNumpad.setEnabled(gameSettings.getBoolean("im_numpad", true));
-        mIMNumpad.setMoveCellSelectionOnPress(gameSettings.getBoolean("im_numpad_move_right", false));
+
         mIMPopup.setHighlightCompletedValues(gameSettings.getBoolean("highlight_completed_values", true));
         mIMPopup.setShowNumberTotals(gameSettings.getBoolean("show_number_totals", false));
         mIMSingleNumber.setHighlightCompletedValues(gameSettings.getBoolean("highlight_completed_values", true));
@@ -249,27 +268,21 @@ public class GameActivity extends AppCompatActivity {
 
         menu.add(0, MENU_ITEM_UNDO, 0, R.string.undo).setIcon(R.drawable.ic_undo);
         menu.add(0, MENU_ITEM_REDO, 1, R.string.redo).setIcon(R.drawable.ic_redo);
-        menu.add(0, MENU_ITEM_CLEAR_ALL_NOTES, 2, R.string.clear_all_notes).setIcon(R.drawable.ic_delete);
-        menu.add(0, MENU_ITEM_FILL_IN_NOTES, 3, R.string.fill_in_notes).setIcon(R.drawable.ic_edit_grey);
-        menu.add(0, MENU_ITEM_SHOW_ERROR, 4, R.string.show_cell_error).setIcon(R.drawable.ic_info);
-        menu.add(0, MENU_ITEM_SHOW_VALUE, 5, R.string.show_cell_value).setIcon(R.drawable.ic_check);
-        menu.add(0, MENU_ITEM_SOLVE, 6, R.string.solve).setIcon(R.drawable.ic_grid);
-        menu.add(0, MENU_ITEM_RESTART, 7, R.string.restart).setIcon(R.drawable.ic_grid);
-        menu.add(0, MENU_ITEM_HELP, 8, R.string.help).setIcon(R.drawable.ic_help);
-        menu.add(0, MENU_ITEM_SETTINGS, 9, R.string.settings).setIcon(R.drawable.ic_settings);
-        menu.add(0, MENU_ITEM_SAVE, 10, R.string.save).setIcon(R.drawable.ic_save);
-        menu.add(0, MENU_ITEM_EXIT, 11, R.string.exit).setIcon(R.drawable.ic_back);
+        SubMenu actionMenu = menu.addSubMenu (2, MENU_ITEM_ACTION_MENU, 2, R.string.actions);
+        actionMenu.add(0, MENU_ITEM_CLEAR_ALL_NOTES, 2, R.string.clear_all_notes).setIcon(R.drawable.ic_delete);
+        actionMenu.add(0, MENU_ITEM_FILL_IN_NOTES, 3, R.string.fill_in_notes).setIcon(R.drawable.ic_notes);
+        actionMenu.add(0, MENU_ITEM_SHOW_ERROR, 4, R.string.show_cell_error).setIcon(R.drawable.ic_clear);
+        actionMenu.add(0, MENU_ITEM_SHOW_ALL_ERRORS, 5, R.string.show_all_errors).setIcon(R.drawable.ic_grid_off);
+        actionMenu.add(0, MENU_ITEM_SHOW_VALUE, 6, R.string.show_cell_value).setIcon(R.drawable.ic_check);
+        actionMenu.add(0, MENU_ITEM_SOLVE, 7, R.string.solve).setIcon(R.drawable.ic_grid);
+        actionMenu.add(0, MENU_ITEM_RESTART, 8, R.string.restart).setIcon(R.drawable.ic_restore);
+        menu.add(0, MENU_ITEM_HELP, 9, R.string.help).setIcon(R.drawable.ic_help);
+        menu.add(0, MENU_ITEM_SETTINGS, 10, R.string.settings).setIcon(R.drawable.ic_settings);
+        menu.add(0, MENU_ITEM_SAVE, 11, R.string.save).setIcon(R.drawable.ic_save);
+        menu.add(0, MENU_ITEM_EXIT, 12, R.string.exit).setIcon(R.drawable.ic_back);
 
         menu.findItem(MENU_ITEM_UNDO).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         menu.findItem(MENU_ITEM_REDO).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-        // Generate any additional actions that can be performed on the
-        // overall list.  In a normal install, there are no additional
-        // actions found here, but this allows other applications to extend
-        // our menu with their own actions.
-        Intent intent = new Intent(null, getIntent().getData());
-        intent.addCategory(Intent.CATEGORY_ALTERNATIVE);
-        menu.addIntentOptions(Menu.CATEGORY_ALTERNATIVE, 0, 0,
-                new ComponentName(this, GameActivity.class), null, intent, 0, null);
 
         return true;
     }
@@ -281,33 +294,25 @@ public class GameActivity extends AppCompatActivity {
         if (sudokuGame.getStatus().equals(SudokuGame.IN_PROGRESS)) {
             if (sudokuGame.hasUndo()) {
                 menu.findItem(MENU_ITEM_UNDO).setEnabled(true);
+                menu.findItem(MENU_ITEM_UNDO).getIcon().setAlpha(255);
             } else {
                 menu.findItem(MENU_ITEM_UNDO).setEnabled(false);
+                menu.findItem(MENU_ITEM_UNDO).getIcon().setAlpha(64);
             }
             if (sudokuGame.hasRedo()) {
                 menu.findItem(MENU_ITEM_REDO).setEnabled(true);
+                menu.findItem(MENU_ITEM_REDO).getIcon().setAlpha(255);
             } else {
                 menu.findItem(MENU_ITEM_REDO).setEnabled(false);
+                menu.findItem(MENU_ITEM_REDO).getIcon().setAlpha(64);
             }
-            if (mSudokuBoard.getHighlightWrongVals()) {
-                menu.findItem(MENU_ITEM_SHOW_ERROR).setEnabled(false);
-            } else {
-                menu.findItem(MENU_ITEM_SHOW_ERROR).setEnabled(true);
-            }
-            menu.findItem(MENU_ITEM_SHOW_VALUE).setEnabled(true);
-            menu.findItem(MENU_ITEM_RESTART).setEnabled(true);
-            menu.findItem(MENU_ITEM_SOLVE).setEnabled(true);
-            menu.findItem(MENU_ITEM_CLEAR_ALL_NOTES).setEnabled(true);
-            menu.findItem(MENU_ITEM_FILL_IN_NOTES).setEnabled(true);
+            menu.findItem(MENU_ITEM_ACTION_MENU).setEnabled(true);
         } else {
             menu.findItem(MENU_ITEM_UNDO).setEnabled(false);
+            menu.findItem(MENU_ITEM_UNDO).getIcon().setAlpha(100);
             menu.findItem(MENU_ITEM_REDO).setEnabled(false);
-            menu.findItem(MENU_ITEM_SHOW_ERROR).setEnabled(false);
-            menu.findItem(MENU_ITEM_SHOW_VALUE).setEnabled(false);
-            menu.findItem(MENU_ITEM_RESTART).setEnabled(false);
-            menu.findItem(MENU_ITEM_SOLVE).setEnabled(false);
-            menu.findItem(MENU_ITEM_CLEAR_ALL_NOTES).setEnabled(false);
-            menu.findItem(MENU_ITEM_FILL_IN_NOTES).setEnabled(false);
+            menu.findItem(MENU_ITEM_REDO).getIcon().setAlpha(100);
+            menu.findItem(MENU_ITEM_ACTION_MENU).setEnabled(false);
         }
 
         return true;
@@ -354,6 +359,10 @@ public class GameActivity extends AppCompatActivity {
                     toast.setGravity(Gravity.CENTER, 0, 0);
                     toast.show();
                 }
+                return true;
+            case MENU_ITEM_SHOW_ALL_ERRORS:
+                sudokuGame.showAllErrors();
+                mSudokuBoard.getCells().updateCells();
                 return true;
             case MENU_ITEM_SHOW_VALUE:
                 cell = mSudokuBoard.getSelectedCell();
@@ -467,6 +476,18 @@ public class GameActivity extends AppCompatActivity {
     private void restartActivity() {
         startActivity(getIntent());
         finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        showDialog(DIALOG_EXIT);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        DataResult.getInstance().setTarget(mSudokuBoard.getTarget());
     }
 
 }

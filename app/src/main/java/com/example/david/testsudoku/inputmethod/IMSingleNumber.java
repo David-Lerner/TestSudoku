@@ -160,10 +160,12 @@ public class IMSingleNumber extends InputMethod {
 	private void update() {
 		switch (mEditMode) {
 			case MODE_EDIT_NOTE:
-				mSwitchNumNoteButton.setImageResource(R.drawable.ic_edit_white);
+				mSwitchNumNoteButton.setImageResource(R.drawable.ic_notes_white);
+				mSwitchNumNoteButton.getBackground().setColorFilter(Color.GRAY,PorterDuff.Mode.MULTIPLY);
 				break;
 			case MODE_EDIT_VALUE:
-				mSwitchNumNoteButton.setImageResource(R.drawable.ic_edit_grey);
+				mSwitchNumNoteButton.setImageResource(R.drawable.ic_notes);
+				mSwitchNumNoteButton.getBackground().setColorFilter(null);
 				break;
 		}
 
@@ -192,7 +194,7 @@ public class IMSingleNumber extends InputMethod {
 					//valuesUseCount = mBoard.getCells().getValuesUseCount();
 					valuesUseCount = new HashMap<>();
 					for (int value = 1; value <= sudokuGame.getLength(); value++) {
-						valuesUseCount.put(value, 0);
+						valuesUseCount.put(value, sudokuGame.getValueCount(value));
 					}
 
 				}
@@ -204,7 +206,7 @@ public class IMSingleNumber extends InputMethod {
 						if (highlightValue) {
 							Button b = mNumberButtons.get(entry.getKey());
                             // Only set background color
-                            b.getBackground().setColorFilter(0xFF1B5E20, PorterDuff.Mode.MULTIPLY);
+                            b.getBackground().setColorFilter(Color.BLUE, PorterDuff.Mode.MULTIPLY);
 							b.setTextColor(Color.WHITE);
 						}
 					}

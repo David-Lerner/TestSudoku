@@ -85,7 +85,7 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:text="C" />
+            android:drawableEnd="@drawable/ic_erase" />
         <Button
             android:id="@+id/switch_input_mode"
             android:layout_width="fill_parent"
