@@ -6,8 +6,13 @@ import java.util.Collections;
 import java.util.List;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.LightingColorFilter;
+import android.support.v7.widget.PopupMenu;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -22,9 +27,8 @@ import com.example.david.testsudoku.SudokuBoardView.OnCellTappedListener;
 public class IMControlPanel extends LinearLayout {
     private static final String TAG = "IMControlPanel";
 
-	public static final int INPUT_METHOD_NUMPAD = 0;
-    public static final int INPUT_METHOD_SINGLE_NUMBER = 1;
-    public static final int INPUT_METHOD_POPUP = 2;
+	private static final int TITLE = 10;
+	private static final int INPUT_GROUP = 0;
 
     private Context mContext;
 	private SudokuBoardView mBoard;
@@ -32,6 +36,8 @@ public class IMControlPanel extends LinearLayout {
 
 	private List<InputMethod> mInputMethods = new ArrayList<InputMethod>();
 	private int mActiveMethodIndex = -1;
+
+	private int count = 0;
 
 	public IMControlPanel(Context context) {
 		super(context);
@@ -41,7 +47,6 @@ public class IMControlPanel extends LinearLayout {
 	public IMControlPanel(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		mContext = context;
-        Log.d(TAG,"IMControlPanel() (constructor)");
 	}
 
 	public void initialize(SudokuBoardView board, HintsQueue hintsQueue) {
@@ -130,8 +135,35 @@ public class IMControlPanel extends LinearLayout {
 		}
 	}
 
+	private void selectInputMethod(View v) {
+		ensureInputMethods();
+
+		PopupMenu menu = new PopupMenu(mContext, v);
+		menu.getMenu().add(TITLE, TITLE, 0, mContext.getString(R.string.input_methods));
+		menu.getMenu().findItem(TITLE).setEnabled(false);
+		for (int i = 0; i < mInputMethods.size(); i++) {
+			InputMethod method = mInputMethods.get(i);
+			if (method.isEnabled()) {
+				menu.getMenu().add(INPUT_GROUP, i, i+1, mContext.getString(method.getNameResID()));
+				menu.getMenu().findItem(i).setChecked(method.isActive());
+			}
+		}
+		menu.getMenu().setGroupCheckable(INPUT_GROUP, true, true);
+		menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+			@Override
+			public boolean onMenuItemClick(MenuItem item) {
+				count++;
+				if (count >= mInputMethods.size() && mHintsQueue != null) {
+					mHintsQueue.showOneTimeHint("thatIsAll", R.string.that_is_all, R.string.im_disable_modes_hint);
+				}
+				activateInputMethod(item.getItemId());
+				return true;
+			}
+		});
+		menu.show();
+	}
+
 	public void activateNextInputMethod() {
-        Log.d(TAG, "activateNextInputMethod()");
 		ensureInputMethods();
 
 		int id = mActiveMethodIndex + 1;
@@ -142,19 +174,6 @@ public class IMControlPanel extends LinearLayout {
 			id = 0;
 		}
 		activateInputMethod(id);
-	}
-
-	/**
-	 * Returns input method object by its ID (see INPUT_METHOD_* constants).
-	 *
-	 * @param methodId
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public <T extends InputMethod> T getInputMethod(int methodId) {
-		ensureInputMethods();
-        Log.d(TAG, "getInputMethod(int methodId="+methodId+"), returns mInputMethods.get(methodId)="+mInputMethods.get(methodId).getAbbrName());
-		return (T) mInputMethods.get(methodId);
 	}
 
 	public List<InputMethod> getInputMethods() {
@@ -199,15 +218,15 @@ public class IMControlPanel extends LinearLayout {
 
 	private void createInputMethods() {
 		if (mInputMethods.size() == 0) {
-			addInputMethod(INPUT_METHOD_NUMPAD, new IMNumpad());
-            addInputMethod(INPUT_METHOD_SINGLE_NUMBER, new IMSingleNumber());
-            addInputMethod(INPUT_METHOD_POPUP, new IMPopup());
+			addInputMethod(new IMPopup());
+			addInputMethod(new IMSingleNumber());
+			addInputMethod(new IMNumpad());
 		}
 	}
 
-	private void addInputMethod(int methodIndex, InputMethod im) {
+	private void addInputMethod(InputMethod im) {
 		im.initialize(mContext, this, mBoard, mHintsQueue);
-		mInputMethods.add(methodIndex, im);
+		mInputMethods.add(im);
 	}
 
 	/**
@@ -220,8 +239,9 @@ public class IMControlPanel extends LinearLayout {
 		if (!im.isInputMethodViewCreated()) {
 			View controlPanel = im.getInputMethodView();
 			Button switchModeButton = (Button) controlPanel.findViewById(R.id.switch_input_mode);
+			switchModeButton.getBackground().setColorFilter(new LightingColorFilter(Color.parseColor("#008080"), 0));
 			switchModeButton.setOnClickListener(mSwitchModeListener);
-			this.addView(controlPanel, LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+			this.addView(controlPanel, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 		}
 	}
 
@@ -246,7 +266,7 @@ public class IMControlPanel extends LinearLayout {
 	private OnClickListener mSwitchModeListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
-			activateNextInputMethod();
+			selectInputMethod(v);
 		}
 	};
 

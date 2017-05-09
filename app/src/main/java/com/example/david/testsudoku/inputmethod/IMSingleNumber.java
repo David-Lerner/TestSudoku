@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.LightingColorFilter;
 import android.graphics.PorterDuff;
 import android.os.Handler;
+import android.support.v4.widget.TextViewCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -44,6 +45,8 @@ public class IMSingleNumber extends InputMethod {
 	private Map<Integer, Button> mNumberButtons;
 	private ImageButton mSwitchNumNoteButton;
 
+	public static final String SETTINGS_ENABLE_NAME = "im_single_number";
+
 	public IMSingleNumber() {
 		super();
 
@@ -54,7 +57,7 @@ public class IMSingleNumber extends InputMethod {
 		return mHighlightCompletedValues;
 	}
 
-
+	@Override
 	public void setHighlightCompletedValues(boolean highlightCompletedValues) {
 		mHighlightCompletedValues = highlightCompletedValues;
 	}
@@ -63,6 +66,7 @@ public class IMSingleNumber extends InputMethod {
 		return mShowNumberTotals;
 	}
 
+	@Override
 	public void setShowNumberTotals(boolean showNumberTotals) {
 		mShowNumberTotals = showNumberTotals;
 	}
@@ -86,8 +90,8 @@ public class IMSingleNumber extends InputMethod {
 	}
 
 	@Override
-	public String getAbbrName() {
-		return mContext.getString(R.string.single_number_abbr);
+	public String getSettingsEnableName() {
+		return SETTINGS_ENABLE_NAME;
 	}
 
 	@Override
@@ -175,19 +179,18 @@ public class IMSingleNumber extends InputMethod {
 			public void run() {
 				for (Button b : mNumberButtons.values()) {
 					if (b.getTag().equals(mSelectedNumber)) {
-						b.setTextAppearance(mContext, android.R.style.TextAppearance_Large);
+                        TextViewCompat.setTextAppearance(b, android.R.style.TextAppearance_Large);
                         /* Use focus instead color */
 						/*LightingColorFilter selBkgColorFilter = new LightingColorFilter(
 								mContext.getResources().getColor(R.color.im_number_button_selected_background), 0);
 						b.getBackground().setColorFilter(selBkgColorFilter);*/
                         b.requestFocus();
 					} else {
-						b.setTextAppearance(mContext, android.R.style.TextAppearance_Widget_Button);
+                        TextViewCompat.setTextAppearance(b, android.R.style.TextAppearance_Widget_Button);
 						b.getBackground().setColorFilter(null);
 					}
 				}
 
-				//excluding unpossible values -implement later
 				Map<Integer, Integer> valuesUseCount = null;
 				if (mHighlightCompletedValues || mShowNumberTotals) {
 					//below: get number of times each number shows up in puzzle; > 9 = not possible

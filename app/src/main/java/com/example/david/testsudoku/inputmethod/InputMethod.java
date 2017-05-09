@@ -1,34 +1,11 @@
-/* 
- * Copyright (C) 2009 Roman Masek
- * 
- * This file is part of OpenSudoku.
- * 
- * OpenSudoku is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * OpenSudoku is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with OpenSudoku.  If not, see <http://www.gnu.org/licenses/>.
- * 
- */
 
 package com.example.david.testsudoku.inputmethod;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.LightingColorFilter;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 
 import com.david.completesudoku.SudokuGame;
-import com.example.david.testsudoku.R;
 import com.example.david.testsudoku.CellTile;
 import com.example.david.testsudoku.HintsQueue;
 import com.example.david.testsudoku.SudokuBoardView;
@@ -76,10 +53,6 @@ public abstract class InputMethod {
 		if (mInputMethodView == null) {
             Log.d(TAG, "mInputMethodView == null");
 			mInputMethodView = createControlPanelView();
-			View switchModeView = mInputMethodView.findViewById(R.id.switch_input_mode);
-			Button switchModeButton = (Button) switchModeView;
-			switchModeButton.setText(getAbbrName());
-			switchModeButton.getBackground().setColorFilter(new LightingColorFilter(Color.parseColor("#00695c"), 0));
 			onControlPanelCreated(mInputMethodView);
 		}
 
@@ -111,12 +84,7 @@ public abstract class InputMethod {
 
 	public abstract int getHelpResID();
 
-	/**
-	 * Gets abbreviated name of input method, which will be displayed on input method switch button.
-	 *
-	 * @return
-	 */
-	public abstract String getAbbrName();
+	public abstract String getSettingsEnableName();
 
 	public void setEnabled(boolean enabled) {
 		mEnabled = enabled;
@@ -140,11 +108,18 @@ public abstract class InputMethod {
 		onDeactivated();
 	}
 
+	public boolean isActive() {
+		return mActive;
+	}
+
 	protected abstract View createControlPanelView();
 
 	protected void onControlPanelCreated(View controlPanel) {
 
 	}
+
+	public abstract void setHighlightCompletedValues(boolean highlightCompletedValues);
+	public abstract void setShowNumberTotals(boolean numberTotals);
 
 	protected void onActivated() {
 	}

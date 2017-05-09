@@ -52,17 +52,10 @@ public class IMPopupDialog extends Dialog {
 
 		mTabHost = createTabView();
 
-		// hide dialog's title
-		//TextView title = (TextView) findViewById(android.R.id.title);
-		//title.setVisibility(View.GONE);
-
 		setContentView(mTabHost);
 	}
 
 	/**
-	 * LightingColorFilter bkgColorFilter = new LightingColorFilter(
-	 * mContext.getResources().getColor(R.color.im_number_button_completed_background), 0);
-	 * <p/>
 	 * Registers a callback to be invoked when number is selected.
 	 *
 	 * @param l
@@ -81,13 +74,6 @@ public class IMPopupDialog extends Dialog {
 	}
 
 	public void resetButtons() {
-		/*for (Button b : mNumberButtons.values()) {
-			b.setBackgroundResource(R.drawable.btn_default_bg);
-		}
-
-		for (Button b : mNoteNumberButtons.values()) {
-			b.setBackgroundResource(R.drawable.btn_toggle_bg);
-		}*/
 
 		for (Map.Entry<Integer, ToggleButton> entry : mNoteNumberButtons.entrySet()) {
 			entry.getValue().setText("" + entry.getKey());
@@ -181,16 +167,16 @@ public class IMPopupDialog extends Dialog {
 	 */
 	private TabHost createTabView() {
 		TabHost tabHost = new TabHost(mContext, null);
-		tabHost.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+		tabHost.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		//tabHost.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 
 		LinearLayout linearLayout = new LinearLayout(mContext);
-		linearLayout.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+		linearLayout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		//linearLayout.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 		linearLayout.setOrientation(LinearLayout.VERTICAL);
 
 		TabWidget tabWidget = new TabWidget(mContext);
-        tabWidget.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        tabWidget.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		tabWidget.setId(android.R.id.tabs);
 
 		FrameLayout frameLayout = new FrameLayout(mContext);

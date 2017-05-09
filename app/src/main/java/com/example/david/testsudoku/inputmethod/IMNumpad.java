@@ -32,6 +32,8 @@ public class IMNumpad extends InputMethod {
 	private static final int MODE_EDIT_VALUE = 0;
 	private static final int MODE_EDIT_NOTE = 1;
 
+	public static final String SETTINGS_ENABLE_NAME = "im_numpad";
+
 	private CellTile mSelectedCell;
 	private ImageButton mSwitchNumNoteButton;
 
@@ -57,6 +59,7 @@ public class IMNumpad extends InputMethod {
 	 *
 	 * @param highlightCompletedValues
 	 */
+	@Override
 	public void setHighlightCompletedValues(boolean highlightCompletedValues) {
 		mHighlightCompletedValues = highlightCompletedValues;
 	}
@@ -65,6 +68,7 @@ public class IMNumpad extends InputMethod {
 		return mShowNumberTotals;
 	}
 
+	@Override
 	public void setShowNumberTotals(boolean showNumberTotals) {
 		mShowNumberTotals = showNumberTotals;
 	}
@@ -128,8 +132,8 @@ public class IMNumpad extends InputMethod {
 	}
 
 	@Override
-	public String getAbbrName() {
-		return mContext.getString(R.string.numpad_abbr);
+	public String getSettingsEnableName() {
+		return SETTINGS_ENABLE_NAME;
 	}
 
 	@Override

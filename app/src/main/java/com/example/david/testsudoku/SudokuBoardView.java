@@ -546,7 +546,7 @@ public class SudokuBoardView extends View {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     if(event.getAction() == event.ACTION_DOWN){
-                        if(firstTouch && (System.currentTimeMillis() - time) <= 300) {
+                        if(firstTouch && (System.currentTimeMillis() - time) <= DOUBLE_CLICK_TIME_DELTA) {
                             Log.e("** DOUBLE TAP**"," second tap ");
                             if (mSelectedCell == getCellAtPoint(x, y)) {
                                 sudokuGame.setHighlighted(mSelectedCell.getRow(), mSelectedCell.getCol(),

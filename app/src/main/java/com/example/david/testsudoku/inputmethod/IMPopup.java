@@ -23,6 +23,8 @@ public class IMPopup extends InputMethod {
 	private IMPopupDialog mEditCellDialog;
 	private CellTile mSelectedCell;
 
+	public static final String SETTINGS_ENABLE_NAME = "im_popup";
+
 	public boolean getHighlightCompletedValues() {
 		return mHighlightCompletedValues;
 	}
@@ -33,6 +35,7 @@ public class IMPopup extends InputMethod {
 	 *
 	 * @param highlightCompletedValues
 	 */
+	@Override
 	public void setHighlightCompletedValues(boolean highlightCompletedValues) {
 		mHighlightCompletedValues = highlightCompletedValues;
 	}
@@ -41,6 +44,7 @@ public class IMPopup extends InputMethod {
 		return mShowNumberTotals;
 	}
 
+	@Override
 	public void setShowNumberTotals(boolean showNumberTotals) {
 		mShowNumberTotals = showNumberTotals;
 	}
@@ -63,6 +67,11 @@ public class IMPopup extends InputMethod {
 	@Override
 	protected void onDeactivated() {
 		mBoard.setAutoHideTouchedCellHint(true);
+	}
+
+	@Override
+	public String getSettingsEnableName() {
+		return SETTINGS_ENABLE_NAME;
 	}
 
 	@Override
@@ -119,11 +128,6 @@ public class IMPopup extends InputMethod {
 	@Override
 	public int getHelpResID() {
 		return R.string.im_popup_hint;
-	}
-
-	@Override
-	public String getAbbrName() {
-		return mContext.getString(R.string.popup_abbr);
 	}
 
 	@Override
