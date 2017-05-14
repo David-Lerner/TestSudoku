@@ -776,6 +776,7 @@ public class SudokuGame {
 
     public void setName(String name) {
         this.name = name;
+        update();
     }
 
     public String getDifficulty() {

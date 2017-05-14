@@ -41,6 +41,10 @@ public class IMNumpad extends InputMethod {
 
 	private Map<Integer, Button> mNumberButtons;
 
+	private long time;
+	boolean firstTouch;
+	private static final long DOUBLE_CLICK_TIME_DELTA = 300;//milliseconds
+
 	public boolean isMoveCellSelectionOnPress() {
 		return moveCellSelectionOnPress;
 	}
@@ -79,6 +83,9 @@ public class IMNumpad extends InputMethod {
 		super.initialize(context, controlPanel, board, hintsQueue);
 
 		sudokuGame.addOnChangeListener(mOnCellsChangeListener);
+
+		time = System.currentTimeMillis();
+		firstTouch = false;
         Log.d(TAG, "initialize()");
 	}
 
@@ -158,14 +165,31 @@ public class IMNumpad extends InputMethod {
 
 			if (selCell != null) {
 				//set cell value/possibilities
-				switch (mEditMode) {
-					case MODE_EDIT_NOTE:
-					    Log.d(TAG, "i: "+ selCell.getRow()+" j: "+selCell.getCol()+" n: "+selNumber);
-					    sudokuGame.setPossibleAction(selCell.getRow(), selCell.getCol(), selNumber);
-						break;
-					case MODE_EDIT_VALUE:
-					    sudokuGame.setValueAction(selCell.getRow(), selCell.getCol(), selNumber);
-						break;
+				if(firstTouch && (System.currentTimeMillis() - time) <= DOUBLE_CLICK_TIME_DELTA) {
+					Log.d("** DOUBLE TAP**"," second tap ");
+					switch (mEditMode) {
+						case MODE_EDIT_NOTE:
+							sudokuGame.setHighlightedPossibilityAction(selNumber);
+							break;
+						case MODE_EDIT_VALUE:
+							sudokuGame.setHighlightedValueAction(selNumber);
+							break;
+					}
+					firstTouch = false;
+
+				} else {
+					firstTouch = true;
+					time = System.currentTimeMillis();
+					Log.d("** SINGLE  TAP**"," First Tap time  "+time);
+					switch (mEditMode) {
+						case MODE_EDIT_NOTE:
+							Log.d(TAG, "i: "+ selCell.getRow()+" j: "+selCell.getCol()+" n: "+selNumber);
+							sudokuGame.setPossibleAction(selCell.getRow(), selCell.getCol(), selNumber);
+							break;
+						case MODE_EDIT_VALUE:
+							sudokuGame.setValueAction(selCell.getRow(), selCell.getCol(), selNumber);
+							break;
+					}
 				}
 			}
 		}

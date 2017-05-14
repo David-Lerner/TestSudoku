@@ -42,6 +42,10 @@ public class IMSingleNumber extends InputMethod {
 	private Map<Integer, Button> mNumberButtons;
 	private ImageButton mSwitchNumNoteButton;
 
+	private long time;
+	boolean firstTouch;
+	private static final long DOUBLE_CLICK_TIME_DELTA = 300;//milliseconds
+
 	public static final String SETTINGS_ENABLE_NAME = "im_single_number";
 
 	public IMSingleNumber() {
@@ -74,6 +78,9 @@ public class IMSingleNumber extends InputMethod {
 		super.initialize(context, controlPanel, board, hintsQueue);
 
 		sudokuGame.addOnChangeListener(mOnCellsChangeListener);
+
+		time = System.currentTimeMillis();
+		firstTouch = false;
 	}
 
 	@Override
@@ -234,13 +241,31 @@ public class IMSingleNumber extends InputMethod {
 	protected void onCellTapped(CellTile cell) {
 		int selNumber = mSelectedNumber;
 
-		switch (mEditMode) {
-			case MODE_EDIT_NOTE:
-                sudokuGame.setPossibleAction(cell.getRow(), cell.getCol(), selNumber);
-				break;
-			case MODE_EDIT_VALUE:
-                sudokuGame.setValueAction(cell.getRow(), cell.getCol(), selNumber);
-				break;
+		if (cell != null) {
+			//set cell value/possibilities
+			if (firstTouch && (System.currentTimeMillis() - time) <= DOUBLE_CLICK_TIME_DELTA) {
+				switch (mEditMode) {
+					case MODE_EDIT_NOTE:
+						sudokuGame.setHighlightedPossibilityAction(selNumber);
+						break;
+					case MODE_EDIT_VALUE:
+						sudokuGame.setHighlightedValueAction(selNumber);
+						break;
+				}
+				firstTouch = false;
+
+			} else {
+				firstTouch = true;
+				time = System.currentTimeMillis();
+				switch (mEditMode) {
+					case MODE_EDIT_NOTE:
+						sudokuGame.setPossibleAction(cell.getRow(), cell.getCol(), selNumber);
+						break;
+					case MODE_EDIT_VALUE:
+						sudokuGame.setValueAction(cell.getRow(), cell.getCol(), selNumber);
+						break;
+				}
+			}
 		}
 
 	}

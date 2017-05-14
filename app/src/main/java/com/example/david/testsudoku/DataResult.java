@@ -1,6 +1,8 @@
 package com.example.david.testsudoku;
 
+import com.david.completesudoku.Sudoku;
 import com.david.completesudoku.SudokuGame;
+import com.david.completesudoku.SudokuModel;
 
 /**
  * Singleton pattern.
@@ -10,6 +12,7 @@ public class DataResult {
 
     private static DataResult instance;
     private SudokuGame sudokuGame = null;
+    private SudokuModel sudokuModel = null;
     private int target = 0;
 
     protected DataResult() {
@@ -37,5 +40,13 @@ public class DataResult {
 
     public void setTarget(int target) {
         this.target = target;
+    }
+
+    public SudokuModel getSudokuModel() {
+        return sudokuModel;
+    }
+
+    public void setSudokuModel(SudokuModel sudokuModel) {
+        this.sudokuModel = sudokuModel;
     }
 }

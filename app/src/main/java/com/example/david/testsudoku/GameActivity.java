@@ -6,7 +6,9 @@ import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
@@ -18,12 +20,12 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.david.completesudoku.Sudoku;
 import com.david.completesudoku.SudokuGame;
-import com.david.completesudoku.SudokuGenerator;
+import com.david.completesudoku.SudokuModel;
 import com.example.david.testsudoku.inputmethod.IMControlPanel;
 import com.example.david.testsudoku.inputmethod.IMControlPanelStatePersister;
 import com.example.david.testsudoku.inputmethod.InputMethod;
@@ -57,6 +59,10 @@ public class GameActivity extends AppCompatActivity {
 
     private static final int REQUEST_SETTINGS = 1;
 
+    public static final int SAVE_SUCCESS = 0;
+    public static final int SAVE_FAILURE = 1;
+    public static final int SAVE_AND_QUIT = 2;
+
     private ViewGroup mRootLayout;
 
     //input
@@ -74,9 +80,9 @@ public class GameActivity extends AppCompatActivity {
 
     private SudokuBoardView mSudokuBoard;
     private SudokuGame sudokuGame;
+    private boolean showScore;
 
-    //for persisting
-    private DataResult dataResult;
+    private Handler saveHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,60 +100,22 @@ public class GameActivity extends AppCompatActivity {
 
         mHintsQueue.showOneTimeHint("welcome", R.string.welcome, R.string.first_run_hint);
 
-        int[][] model = new int[9][9] ;
-
-        // Create the initial situation
-
-        model[0][0] = 9 ;
-        model[0][4] = 2 ;
-        model[0][6] = 7 ;
-        model[0][7] = 5 ;
-
-        model[1][0] = 6 ;
-        model[1][4] = 5 ;
-        model[1][7] = 4 ;
-
-        model[2][1] = 2 ;
-        model[2][3] = 4 ;
-        model[2][7] = 1 ;
-
-        model[3][0] = 2 ;
-        model[3][2] = 8 ;
-
-        model[4][1] = 7 ;
-        model[4][3] = 5 ;
-        model[4][5] = 9 ;
-        model[4][7] = 6 ;
-
-        model[5][6] = 4 ;
-        model[5][8] = 1 ;
-
-        model[6][1] = 1 ;
-        model[6][5] = 5 ;
-        model[6][7] = 8 ;
-
-        model[7][1] = 9 ;
-        model[7][4] = 7 ;
-        model[7][8] = 4 ;
-
-        model[8][1] = 8 ;
-        model[8][2] = 2 ;
-        model[8][4] = 4 ;
-        model[8][8] = 6 ;
-
         //persist data on activity restarts
-        dataResult = DataResult.getInstance();
-        sudokuGame = dataResult.getSudokuGame();
+        sudokuGame = DataResult.getInstance().getSudokuGame();
         if (sudokuGame == null) {
             //change to return to previous screen
-            sudokuGame = new SudokuGame(new Sudoku(model));
-            dataResult.setSudokuGame(sudokuGame);
+            Toast toast = Toast.makeText(this, R.string.no_cell, Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
+            finish();
         }
+        sudokuGame.clearOnChangeListeners();
 
         sudokuGame.addOnChangeListener(new SudokuGame.OnChangeListener() {
             @Override
             public void onChange() {
                 invalidateOptionsMenu();
+                getSupportActionBar().setTitle(sudokuGame.getName());
             }
         });
 
@@ -160,7 +128,7 @@ public class GameActivity extends AppCompatActivity {
             }
         }
 
-        mSudokuBoard.setTarget(dataResult.getTarget());
+        mSudokuBoard.setTarget(DataResult.getInstance().getTarget());
 
         //input
         mIMControlPanel = (IMControlPanel) findViewById(R.id.input_methods);
@@ -173,23 +141,16 @@ public class GameActivity extends AppCompatActivity {
         Log.d(TAG, "calling begin()");
         sudokuGame.begin();
 
-        /*if (mSudokuGame.getState() == SudokuGame.GAME_STATE_NOT_STARTED) {
-            mSudokuGame.start();
-        } else if (mSudokuGame.getState() == SudokuGame.GAME_STATE_PLAYING) {
-            mSudokuGame.resume();
-        }
-
-        if (mSudokuGame.getState() == SudokuGame.GAME_STATE_COMPLETED) {
-            mSudokuBoard.setReadOnly(true);
-        }*/
-
-         timerRunnable = new Runnable() {
-
+        showScore = false;
+        timerRunnable = new Runnable() {
             @Override
             public void run() {
-
                 mTimeLabel.setText(sudokuGame.getElapsedFormatted());
-
+                if (sudokuGame.getStatus().equals(SudokuGame.COMPLETED) && !showScore) {
+                    showScore = true;
+                    mSudokuBoard.setReadOnly(true);
+                    showDialog(DIALOG_WELL_DONE);
+                }
                 timerHandler.postDelayed(this, 1000);
             }
         };
@@ -197,6 +158,29 @@ public class GameActivity extends AppCompatActivity {
 
         ActionBar actionBar = getSupportActionBar();
         actionBar.setTitle(sudokuGame.getName());
+
+        saveHandler = new Handler(){
+            @Override
+            public void handleMessage(Message msg){
+                if (msg.what == SAVE_SUCCESS){
+                    Toast toast = Toast.makeText(GameActivity.this, String.format(getString(R.string.save_success),
+                            sudokuGame.getName()), Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+                } else if (msg.what == SAVE_FAILURE) {
+                    Toast toast = Toast.makeText(GameActivity.this, String.format(getString(R.string.save_failure),
+                            sudokuGame.getName()), Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+                } else if (msg.what == SAVE_AND_QUIT) {
+                    Toast toast = Toast.makeText(GameActivity.this, String.format(getString(R.string.save_success),
+                            sudokuGame.getName()), Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+                    finish();
+                }
+            }
+        };
     }
 
     @Override
@@ -322,6 +306,9 @@ public class GameActivity extends AppCompatActivity {
             case MENU_ITEM_REDO:
                 sudokuGame.redo();
                 return true;
+            case MENU_ITEM_ACTION_MENU:
+                mHintsQueue.showOneTimeHint("actions", R.string.actions, R.string.actions_hint);
+                return true;
             case MENU_ITEM_SHOW_ERROR:
                 cell = mSudokuBoard.getSelectedCell();
                 if (cell != null) {
@@ -388,8 +375,20 @@ public class GameActivity extends AppCompatActivity {
                 return new AlertDialog.Builder(this)
                         .setIcon(R.drawable.ic_info)
                         .setTitle(R.string.complete)
+                        .setCancelable(false)
                         .setMessage(String.format(getString(R.string.congrats), sudokuGame.getElapsedFormatted(), sudokuGame.getScore()))
-                        .setPositiveButton(android.R.string.ok, null)
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which){
+                                SudokuModel sudokuModel = DataResult.getInstance().getSudokuModel();
+                                try {
+                                    sudokuModel.saveGame(sudokuGame, saveHandler);
+                                } catch (Exception e) {
+                                    Log.d(TAG, e.getMessage());
+                                    saveHandler.sendEmptyMessage(SAVE_FAILURE);
+                                }
+                            }
+                        })
                         .create();
             case DIALOG_SOLVE:
                 return new AlertDialog.Builder(this)
@@ -405,20 +404,31 @@ public class GameActivity extends AppCompatActivity {
                         .setNegativeButton(android.R.string.no, null)
                         .create();
             case DIALOG_SAVE:
-                return new AlertDialog.Builder(this)
+                final EditText editText = new EditText(getApplicationContext());
+                editText.setText(sudokuGame.getName());
+                editText.setTextColor(Color.BLACK);
+                AlertDialog alertDialog = new AlertDialog.Builder(this)
                         .setIcon(R.drawable.ic_save)
                         .setTitle(R.string.app_name)
                         .setMessage(R.string.save_dialog)
+                        .setView(editText)
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
-                                Toast toast = Toast.makeText(GameActivity.this, "Save not implemented", Toast.LENGTH_SHORT);
-                                toast.setGravity(Gravity.CENTER, 0, 0);
-                                toast.show();
+                                String name = editText.getText().toString();
+                                sudokuGame.setName(name);
+                                SudokuModel sudokuModel = DataResult.getInstance().getSudokuModel();
+                                try {
+                                    sudokuModel.saveGame(sudokuGame, saveHandler);
+                                } catch (Exception e) {
+                                    Log.d(TAG, e.getMessage());
+                                    saveHandler.sendEmptyMessage(SAVE_FAILURE);
+                                }
                             }
                         })
                         .setNegativeButton(android.R.string.no, null)
                         .create();
+                return alertDialog;
             case DIALOG_EXIT:
                 return new AlertDialog.Builder(this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
@@ -457,6 +467,10 @@ public class GameActivity extends AppCompatActivity {
 
         DataResult.getInstance().setTarget(mSudokuBoard.getTarget());
         DataResult.getInstance().setSudokuGame(sudokuGame);
+    }
+
+    public interface Callback {
+        public void call(String message);
     }
 
 }

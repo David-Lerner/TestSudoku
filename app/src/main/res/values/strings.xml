@@ -26,7 +26,7 @@
     <string name="restart_confirm">Are you sure you want to restart this game?</string>
     <string name="complete">Complete</string>
     <string name="solve_confirm">Are you sure you want to give up and show the solution?</string>
-    <string name="back_confirm">Are you sure you want to exit?</string>
+    <string name="back_confirm">Are you sure you want to exit? (Unsaved changes will be lost)</string>
     <string name="save_dialog">Enter a name for this puzzle</string>
     <string name="no_cell">No cell selected</string>
     <string name="settings">Settings</string>
@@ -50,11 +50,13 @@
     <string name="help">Help</string>
     <string name="that_is_all">That\'s all</string>
 
-
     <string name="first_run_hint">There are several input modes which you can use to fill in the puzzle.
         In order to help you get familiar with these modes there will be several hints displayed as you
-        go through them.\n\nYou can disable these hints in game settings.\n
+        go through them.\n\nYou can disable these hints in the game settings.\n
 	</string>
+    <string name="actions_hint">This menu contains certain actions to help you with the puzzle.
+        Warning: Applying these actions may reduce your final score.\n
+    </string>
     <string name="im_popup_hint">You\'re now in the <i>Popup</i> input mode.
         Tap any cell to edit its content.\n\nNotice the button in the lower right corner.
         You can use this button to switch to another input mode.\n
@@ -70,7 +72,10 @@
     <string name="im_disable_modes_hint">You don\'t have to use all input modes. You can disable
 		any of them in the game settings.\n
 	</string>
-    <string name="help_text"><b>Highlighting</b>\n\nYou can highlight or unhighlight a cell by double tapping
+    <string name="help_text"><b>Hints</b>\n\nHints that guide you through the application controls will
+        be shown the first time you encounter them. You can disable these hints in the game settings.
+        Disabling then re-enabling hints will reset them\n\n<b>Highlighting</b>\n\nYou can highlight
+        or unhighlight a cell by double tapping
         it\n\n<b>Actions</b>\n\nThe actions tab in the menu gives you several actions to help you solve the puzzle.
         Be warned that using these actions may reduce your final score.\n\n<b>Input modes</b>\n\nYou
         can switch between several input modes using button in the lower right corner of the screen.
@@ -94,5 +99,8 @@
     <string name="highlight_touched_cell_summary">Highlight the row and column of a touched cell.</string>
     <string name="highlight_completed_values">Highlight completed numbers</string>
     <string name="highlight_completed_values_summary">Highlight buttons for numbers which have been entered 9 times.</string>
+
+    <string name="save_failure" formatted="false">Failed to save %s</string>
+    <string name="save_success" formatted="false">%s has been saved</string>
 
 </resources>

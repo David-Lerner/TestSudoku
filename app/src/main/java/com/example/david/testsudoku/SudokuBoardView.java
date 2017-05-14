@@ -64,7 +64,7 @@ public class SudokuBoardView extends View {
     private Paint mCellValueInvalidPaint;
 
     private long time;
-    boolean firstTouch = false;
+    boolean firstTouch;
 
     public SudokuBoardView(Context context) {
         this(context, null);

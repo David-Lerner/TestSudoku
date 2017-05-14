@@ -4,8 +4,6 @@ package com.example.david.testsudoku;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import com.example.david.testsudoku.R;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -115,11 +113,6 @@ public class HintsQueue {
 	public void showOneTimeHint(String key, int titleResID, int messageResID, Object... args) {
 		if (mOneTimeHintsEnabled) {
 
-			// legacy
-			if (legacyHintsWereDisplayed()) {
-				return;
-			}
-
 			String hintKey = "hint_" + key;
 			if (!mPrefs.getBoolean(hintKey, false)) {
 				showHint(titleResID, messageResID, args);
@@ -129,14 +122,6 @@ public class HintsQueue {
 			}
 		}
 
-	}
-
-	public boolean legacyHintsWereDisplayed() {
-		return mPrefs.getBoolean("hint_2131099727", false) &&
-				mPrefs.getBoolean("hint_2131099730", false) &&
-				mPrefs.getBoolean("hint_2131099726", false) &&
-				mPrefs.getBoolean("hint_2131099729", false) &&
-				mPrefs.getBoolean("hint_2131099728", false);
 	}
 
 	public void resetOneTimeHints() {
