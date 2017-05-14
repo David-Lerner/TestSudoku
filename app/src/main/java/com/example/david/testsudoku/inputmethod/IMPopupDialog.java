@@ -27,6 +27,7 @@ import android.widget.LinearLayout.LayoutParams;
 import com.example.david.testsudoku.R;
 
 public class IMPopupDialog extends Dialog {
+	//update buttons when sudokugame is changed
 
 	private Context mContext;
 	private LayoutInflater mInflater;

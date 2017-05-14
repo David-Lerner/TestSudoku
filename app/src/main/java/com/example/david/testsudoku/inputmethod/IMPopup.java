@@ -11,9 +11,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import com.example.david.testsudoku.R;
 import com.example.david.testsudoku.CellTile;
-import com.example.david.testsudoku.CellCollection;
 import com.example.david.testsudoku.inputmethod.IMPopupDialog.OnNoteEditListener;
 import com.example.david.testsudoku.inputmethod.IMPopupDialog.OnNumberEditListener;
+
 
 public class IMPopup extends InputMethod {
 
@@ -30,7 +30,7 @@ public class IMPopup extends InputMethod {
 	}
 
 	/**
-	 * If set to true, buttons for numbers, which occur in {@link CellCollection}
+	 * If set to true, buttons for numbers, which occur in {@link com.david.completesudoku.Sudoku}
 	 * more than 9-times, will be highlighted.
 	 *
 	 * @param highlightCompletedValues
@@ -144,7 +144,6 @@ public class IMPopup extends InputMethod {
 		public boolean onNumberEdit(int number) {
 			if (number != -1 && mSelectedCell != null) {
 				sudokuGame.setValueAction(mSelectedCell.getRow(), mSelectedCell.getCol(), number);
-				mBoard.getCells().updateCells();
 			}
 			return true;
 		}
@@ -163,7 +162,6 @@ public class IMPopup extends InputMethod {
 						possibilities[n-1] = true;
 				}
 				sudokuGame.setPossibilitiesAction(mSelectedCell.getRow(), mSelectedCell.getCol(), possibilities);
-				mBoard.getCells().updateCells();
 			}
 			return true;
 		}

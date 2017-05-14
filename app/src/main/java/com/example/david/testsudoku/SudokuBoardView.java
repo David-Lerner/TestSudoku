@@ -1,6 +1,5 @@
 package com.example.david.testsudoku;
 
-import com.example.david.testsudoku.CellCollection.OnChangeListener;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,7 +8,9 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+
 import com.david.completesudoku.SudokuGame;
+import com.david.completesudoku.SudokuGame.OnChangeListener;
 
 /**
  * Sudoku board widget.
@@ -28,7 +29,7 @@ public class SudokuBoardView extends View {
     private static final int NO_COLOR = 0;
 
     private SudokuGame sudokuGame;
-    private CellCollection cells;
+    private CellTile[][] cells;
 
     private float mCellWidth;
     private float mCellHeight;
@@ -194,26 +195,21 @@ public class SudokuBoardView extends View {
 
     public void setSudokuGame(SudokuGame game) {
         sudokuGame = game;
-    }
 
-    public SudokuGame getSudokuGame() {
-        return sudokuGame;
-    }
+        if (sudokuGame != null) {
+            cells = new CellTile[sudokuGame.getLength()][sudokuGame.getLength()];
+            for (int i = 0; i < sudokuGame.getLength(); i++) {
+                for (int j = 0; j < sudokuGame.getLength(); j++) {
+                    cells[i][j] = new CellTile(i, j);
+                }
+            }
 
-    public CellCollection getCells() {
-        return cells;
-    }
-
-    public void setCells(CellCollection cells) {
-        this.cells = cells;
-
-        if (cells != null) {
             if (!mReadonly) {
-                mSelectedCell = cells.getCellTile(0,0); // first cell will be selected by default
+                mSelectedCell = cells[0][0]; // first cell will be selected by default
                 onCellSelected(mSelectedCell);
             }
 
-            cells.addOnChangeListener(new OnChangeListener() {
+            sudokuGame.addOnChangeListener(new OnChangeListener() {
                 @Override
                 public void onChange() {
                     postInvalidate();
@@ -224,9 +220,13 @@ public class SudokuBoardView extends View {
         postInvalidate();
     }
 
+    public SudokuGame getSudokuGame() {
+        return sudokuGame;
+    }
+
     public void setTarget(int target) {
         if (cells != null && !mReadonly) {
-            mSelectedCell = cells.getCellTile(target/sudokuGame.getLength(),target%sudokuGame.getLength());
+            mSelectedCell = cells[target/sudokuGame.getLength()][target%sudokuGame.getLength()];
         }
     }
 
@@ -421,7 +421,7 @@ public class SudokuBoardView extends View {
             float noteWidth = mCellWidth / 3f;
             for (int row = 0; row < sudokuGame.getLength(); row++) {
                 for (int col = 0; col < sudokuGame.getLength(); col++) {
-                    CellTile cell = cells.getCellTile(row, col);
+                    CellTile cell = cells[row][col];
 
                     cellLeft = Math.round((col * mCellWidth) + paddingLeft);
                     cellTop = Math.round((row * mCellHeight) + paddingTop);
@@ -549,8 +549,7 @@ public class SudokuBoardView extends View {
                         if(firstTouch && (System.currentTimeMillis() - time) <= DOUBLE_CLICK_TIME_DELTA) {
                             Log.e("** DOUBLE TAP**"," second tap ");
                             if (mSelectedCell == getCellAtPoint(x, y)) {
-                                sudokuGame.setHighlighted(mSelectedCell.getRow(), mSelectedCell.getCol(),
-                                        !sudokuGame.isHighlighted(mSelectedCell.getRow(), mSelectedCell.getCol()));
+                                sudokuGame.setHighlightedAction(mSelectedCell.getRow(), mSelectedCell.getCol());
                             }
                             firstTouch = false;
 
@@ -603,7 +602,7 @@ public class SudokuBoardView extends View {
 
         if (col >= 0 && col < sudokuGame.getLength()
                 && row >= 0 && row < sudokuGame.getLength()) {
-            return cells.getCellTile(row, col);
+            return cells[row][col];
         } else {
             return null;
         }

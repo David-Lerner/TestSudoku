@@ -74,7 +74,6 @@ public class GameActivity extends AppCompatActivity {
 
     private SudokuBoardView mSudokuBoard;
     private SudokuGame sudokuGame;
-    private CellCollection cells;
 
     //for persisting
     private DataResult dataResult;
@@ -145,6 +144,13 @@ public class GameActivity extends AppCompatActivity {
             dataResult.setSudokuGame(sudokuGame);
         }
 
+        sudokuGame.addOnChangeListener(new SudokuGame.OnChangeListener() {
+            @Override
+            public void onChange() {
+                invalidateOptionsMenu();
+            }
+        });
+
         mSudokuBoard.setSudokuGame(sudokuGame);
 
         CellTile[][] cellTiles = new CellTile[sudokuGame.getLength()][sudokuGame.getLength()];
@@ -153,15 +159,8 @@ public class GameActivity extends AppCompatActivity {
                 cellTiles[i][j] = new CellTile(i, j);
             }
         }
-        cells = new CellCollection(cellTiles);
-        mSudokuBoard.setCells(cells);
+
         mSudokuBoard.setTarget(dataResult.getTarget());
-        cells.addOnChangeListener(new CellCollection.OnChangeListener() {
-            @Override
-            public void onChange() {
-                invalidateOptionsMenu();
-            }
-        });
 
         //input
         mIMControlPanel = (IMControlPanel) findViewById(R.id.input_methods);
@@ -305,11 +304,9 @@ public class GameActivity extends AppCompatActivity {
                 return true;
             case MENU_ITEM_CLEAR_ALL_NOTES:
                 sudokuGame.removePossibilities();
-                mSudokuBoard.getCells().updateCells();
                 return true;
             case MENU_ITEM_FILL_IN_NOTES:
                 sudokuGame.showPossibilities();
-                mSudokuBoard.getCells().updateCells();
                 return true;
             case MENU_ITEM_HELP:
                 mHintsQueue.showHint(R.string.help, R.string.help_text);
@@ -321,17 +318,14 @@ public class GameActivity extends AppCompatActivity {
                 return true;
             case MENU_ITEM_UNDO:
                 sudokuGame.undo();
-                mSudokuBoard.getCells().updateCells();
                 return true;
             case MENU_ITEM_REDO:
                 sudokuGame.redo();
-                mSudokuBoard.getCells().updateCells();
                 return true;
             case MENU_ITEM_SHOW_ERROR:
                 cell = mSudokuBoard.getSelectedCell();
                 if (cell != null) {
                     sudokuGame.showError(cell.getRow(), cell.getCol());
-                    mSudokuBoard.getCells().updateCells();
                 } else {
                     Toast toast = Toast.makeText(this, R.string.no_cell, Toast.LENGTH_SHORT);
                     toast.setGravity(Gravity.CENTER, 0, 0);
@@ -340,13 +334,11 @@ public class GameActivity extends AppCompatActivity {
                 return true;
             case MENU_ITEM_SHOW_ALL_ERRORS:
                 sudokuGame.showAllErrors();
-                mSudokuBoard.getCells().updateCells();
                 return true;
             case MENU_ITEM_SHOW_VALUE:
                 cell = mSudokuBoard.getSelectedCell();
                 if (cell != null) {
                     sudokuGame.showAnswer(cell.getRow(), cell.getCol());
-                    mSudokuBoard.getCells().updateCells();
                 } else {
                     Toast toast = Toast.makeText(this, R.string.no_cell, Toast.LENGTH_SHORT);
                     toast.setGravity(Gravity.CENTER, 0, 0);
@@ -388,7 +380,6 @@ public class GameActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 sudokuGame.reset();
-                                mSudokuBoard.getCells().updateCells();
                             }
                         })
                         .setNegativeButton(android.R.string.no, null)
@@ -409,7 +400,6 @@ public class GameActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 sudokuGame.showAllAnswers();
-                                mSudokuBoard.getCells().updateCells();
                             }
                         })
                         .setNegativeButton(android.R.string.no, null)

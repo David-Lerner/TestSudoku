@@ -13,13 +13,13 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageButton;
+
 import com.example.david.testsudoku.R;
 import com.example.david.testsudoku.CellTile;
-import com.example.david.testsudoku.CellCollection;
-import com.example.david.testsudoku.CellCollection.OnChangeListener;
 import com.example.david.testsudoku.HintsQueue;
 import com.example.david.testsudoku.SudokuBoardView;
 import com.example.david.testsudoku.inputmethod.IMControlPanelStatePersister.StateBundle;
+import com.david.completesudoku.SudokuGame.OnChangeListener;
 
 public class IMNumpad extends InputMethod {
 
@@ -54,7 +54,7 @@ public class IMNumpad extends InputMethod {
 	}
 
 	/**
-	 * If set to true, buttons for numbers, which occur in {@link CellCollection}
+	 * If set to true, buttons for numbers, which occur in {@link com.david.completesudoku.Sudoku}
 	 * more than 9-times, will be highlighted.
 	 *
 	 * @param highlightCompletedValues
@@ -78,7 +78,7 @@ public class IMNumpad extends InputMethod {
 							  SudokuBoardView board, HintsQueue hintsQueue) {
 		super.initialize(context, controlPanel, board, hintsQueue);
 
-		board.getCells().addOnChangeListener(mOnCellsChangeListener);
+		sudokuGame.addOnChangeListener(mOnCellsChangeListener);
         Log.d(TAG, "initialize()");
 	}
 
@@ -162,11 +162,9 @@ public class IMNumpad extends InputMethod {
 					case MODE_EDIT_NOTE:
 					    Log.d(TAG, "i: "+ selCell.getRow()+" j: "+selCell.getCol()+" n: "+selNumber);
 					    sudokuGame.setPossibleAction(selCell.getRow(), selCell.getCol(), selNumber);
-                        mBoard.getCells().updateCells();
 						break;
 					case MODE_EDIT_VALUE:
 					    sudokuGame.setValueAction(selCell.getRow(), selCell.getCol(), selNumber);
-                        mBoard.getCells().updateCells();
 						break;
 				}
 			}
@@ -197,7 +195,6 @@ public class IMNumpad extends InputMethod {
 				break;
 		}
 
-		//excluding unpossible values -implement later
 		Map<Integer, Integer> valuesUseCount = null;
 		if (mHighlightCompletedValues || mShowNumberTotals) {
             //below: get number of times each number shows up in puzzle; > 9 = not possible

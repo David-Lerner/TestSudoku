@@ -33,6 +33,7 @@ public class SudokuGame {
     private Deque<ActionPair> redo;
 
     //fields not saved
+    private final List<OnChangeListener> onChangeListeners;
     private int length;
     private boolean paused;
     private int[][] solved;
@@ -71,6 +72,7 @@ public class SudokuGame {
         this.errors = errors;
         this.hints = hints;
 
+        this.onChangeListeners = new ArrayList<>();
         this.length = sudoku.getLength();
         this.paused = true;
         this.solved = null;
@@ -99,6 +101,8 @@ public class SudokuGame {
         this.answers = new boolean[length*length];
         this.errors = new boolean[length*length][length];
         this.hints = new boolean[3];
+
+        this.onChangeListeners = new ArrayList<>();
         this.paused = true;
         this.solved = null;
         this.isErrorShown = new boolean[length][length];
@@ -162,6 +166,58 @@ public class SudokuGame {
 
     public void setRedo(Deque<ActionPair> redo) {
         this.redo = redo;
+    }
+
+    public void update() {
+        onChange();
+    }
+
+    public void addOnChangeListener(OnChangeListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("The listener is null.");
+        }
+        synchronized (onChangeListeners) {
+            if (onChangeListeners.contains(listener)) {
+                throw new IllegalStateException("Listener " + listener + "is already registered.");
+            }
+            onChangeListeners.add(listener);
+        }
+    }
+
+    public void removeOnChangeListener(OnChangeListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("The listener is null.");
+        }
+        synchronized (onChangeListeners) {
+            if (!onChangeListeners.contains(listener)) {
+                throw new IllegalStateException("Listener " + listener + " was not registered.");
+            }
+            onChangeListeners.remove(listener);
+        }
+    }
+
+    public void clearOnChangeListeners() {
+        synchronized (onChangeListeners) {
+            onChangeListeners.clear();
+        }
+    }
+
+    /**
+     * Notify all registered listeners that something has changed.
+     */
+    protected void onChange() {
+        synchronized (onChangeListeners) {
+            for (OnChangeListener l : onChangeListeners) {
+                l.onChange();
+            }
+        }
+    }
+
+    public interface OnChangeListener {
+        /**
+         * Called when anything in the collection changes (cell's value, note, etc.)
+         */
+        void onChange();
     }
 
     public class ActionPair {
@@ -410,6 +466,7 @@ public class SudokuGame {
         action.apply();
         undo.push(new ActionPair(action, reverse));
         redo.clear();
+        onChange();
     }
 
     public void setEraseAction(int targetI, int targetJ) {
@@ -598,6 +655,7 @@ public class SudokuGame {
         ActionPair actionPair = undo.pop();
         actionPair.reverse.apply();
         redo.push(actionPair);
+        onChange();
     }
 
     public void redo() {
@@ -607,9 +665,10 @@ public class SudokuGame {
         ActionPair actionPair = redo.pop();
         actionPair.action.apply();
         undo.push(actionPair);
+        onChange();
     }
 
-    public void setHighlighted(int i, int j, boolean highlighted) {
+    private void setHighlighted(int i, int j, boolean highlighted) {
         this.highlighted[i][j] = highlighted;
     }
 
@@ -659,6 +718,7 @@ public class SudokuGame {
         if (!status.equals(COMPLETED)) {
             start();
             status = IN_PROGRESS;
+            onChange();
         }
     }
 
@@ -669,6 +729,7 @@ public class SudokuGame {
             redo.clear();
             status = COMPLETED;
             score = calculateScore();
+            onChange();
         }
     }
 
@@ -823,7 +884,7 @@ public class SudokuGame {
         setValueAction(i, j, getSolved(i, j));
     }
 
-    public boolean[][] showAllErrors() {
+    public void showAllErrors() {
         boolean[][] mistakes = new boolean[length][length];
         hints[0] = true;
         for (int i = 0; i < length; ++i) {
@@ -836,10 +897,10 @@ public class SudokuGame {
                 }
             }
         }
-        return mistakes;
+        onChange();
     }
 
-    public boolean showError(int i, int j) {
+    public void showError(int i, int j) {
         if (i < 0 || j < 0 || i >= length || j >= length) {
             throw new IllegalArgumentException();
         }
@@ -848,9 +909,8 @@ public class SudokuGame {
         if (getSolved(i, j) != value && value != 0) {
             errors[i*length+j][sudoku.getCell(i, j).getValue()-1] = true;
             isErrorShown[i][j] = true;
-            return true;
         }
-        return false;
+        onChange();
     }
 
     public int getSolved(int targetI, int targetJ) {

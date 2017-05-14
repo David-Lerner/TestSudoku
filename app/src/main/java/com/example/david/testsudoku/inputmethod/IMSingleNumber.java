@@ -6,7 +6,6 @@ import java.util.Map;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.LightingColorFilter;
 import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.support.v4.widget.TextViewCompat;
@@ -18,9 +17,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import com.example.david.testsudoku.R;
 import com.example.david.testsudoku.CellTile;
-import com.example.david.testsudoku.CellCollection;
-import com.david.completesudoku.SudokuGame;
-import com.example.david.testsudoku.CellCollection.OnChangeListener;
+import com.david.completesudoku.SudokuGame.OnChangeListener;
 import com.example.david.testsudoku.HintsQueue;
 import com.example.david.testsudoku.SudokuBoardView;
 import com.example.david.testsudoku.inputmethod.IMControlPanelStatePersister.StateBundle;
@@ -76,7 +73,7 @@ public class IMSingleNumber extends InputMethod {
 							  SudokuBoardView board, HintsQueue hintsQueue) {
 		super.initialize(context, controlPanel, board, hintsQueue);
 
-		board.getCells().addOnChangeListener(mOnCellsChangeListener);
+		sudokuGame.addOnChangeListener(mOnCellsChangeListener);
 	}
 
 	@Override
@@ -240,11 +237,9 @@ public class IMSingleNumber extends InputMethod {
 		switch (mEditMode) {
 			case MODE_EDIT_NOTE:
                 sudokuGame.setPossibleAction(cell.getRow(), cell.getCol(), selNumber);
-                mBoard.getCells().updateCells();
 				break;
 			case MODE_EDIT_VALUE:
                 sudokuGame.setValueAction(cell.getRow(), cell.getCol(), selNumber);
-                mBoard.getCells().updateCells();
 				break;
 		}
 
